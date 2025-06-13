@@ -1,0 +1,7 @@
+{
+    "admin": {
+        "password": "$2b$12$LX/GYdoHeUqzgoxfEmU/bOzGyL3UcWcfe2Vc5FGrzg9U5Vfdau7s.",
+        "role": "admin",
+        "empresa": "Todas"
+    }
+}

@@ -19,6 +19,7 @@ except ImportError:
 LANCAMENTOS_FILE = 'lancamentos.csv'
 EMPRESAS_DATA_FILE = 'empresas_data.json'
 CATEGORIAS_FILE = 'categorias.json'
+CONFIG_FILE = 'config.json' # Ficheiro para guardar as configurações da UI
 
 class CentroCustoApp:
     def __init__(self, root):
@@ -43,6 +44,7 @@ class CentroCustoApp:
         self.setup_styles()
         self.carregar_dados()
         self.criar_widgets()
+        self.carregar_configuracoes() # Carrega as configs depois dos widgets serem criados
         self.root.protocol("WM_DELETE_WINDOW", self.ao_fechar)
 
     def setup_styles(self):
@@ -67,7 +69,6 @@ class CentroCustoApp:
             try:
                 with open(EMPRESAS_DATA_FILE, 'r') as f:
                     self.dados_empresas = json.load(f)
-                    # ALTERADO: Garante que, mesmo que o ficheiro esteja vazio, o programa não falha.
                     if not self.dados_empresas:
                         self.dados_empresas = {"Empresa Padrão": ["Geral"]}
             except (json.JSONDecodeError, FileNotFoundError):
@@ -98,6 +99,7 @@ class CentroCustoApp:
                 self.df_lancamentos = pd.DataFrame(columns=self.colunas)
     
     def salvar_dados(self):
+        """Salva apenas os dados financeiros (lançamentos, empresas, categorias)."""
         try:
             self.df_lancamentos.to_csv(LANCAMENTOS_FILE, index=False)
             with open(EMPRESAS_DATA_FILE, 'w') as f: json.dump(self.dados_empresas, f, indent=4)
@@ -107,8 +109,38 @@ class CentroCustoApp:
             self.set_status(f"Erro ao guardar dados: {e}")
             messagebox.showerror("Erro ao Guardar", f"Não foi possível guardar os dados no ficheiro.\nErro: {e}")
 
+    def salvar_configuracoes(self):
+        """Salva as configurações da interface (ex: filtros de data)."""
+        try:
+            configs = {
+                'data_inicio': self.date_inicio.get_date().strftime('%Y-%m-%d'),
+                'data_fim': self.date_fim.get_date().strftime('%Y-%m-%d'),
+            }
+            with open(CONFIG_FILE, 'w') as f:
+                json.dump(configs, f, indent=4)
+        except Exception as e:
+            print(f"Erro ao salvar configurações: {e}") 
+
+    def carregar_configuracoes(self):
+        """Carrega e aplica as configurações da interface."""
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, 'r') as f:
+                    configs = json.load(f)
+                
+                if 'data_inicio' in configs:
+                    self.date_inicio.set_date(datetime.strptime(configs['data_inicio'], '%Y-%m-%d'))
+                if 'data_fim' in configs:
+                    self.date_fim.set_date(datetime.strptime(configs['data_fim'], '%Y-%m-%d'))
+
+                self.atualizar_relatorio()
+            except Exception as e:
+                print(f"Erro ao carregar configurações: {e}")
+
     def ao_fechar(self):
+        """Salva tudo (dados e configurações) antes de fechar."""
         self.salvar_dados()
+        self.salvar_configuracoes()
         self.root.destroy()
 
     def set_status(self, message):
@@ -130,7 +162,6 @@ class CentroCustoApp:
         self.atualizar_contexto_empresa()
 
     def criar_painel_esquerdo(self, parent):
-        # Frame de ações principais
         frame_acoes_principais = ttk.Frame(parent)
         frame_acoes_principais.pack(fill='x', padx=5, pady=(0, 10))
         frame_acoes_principais.columnconfigure(0, weight=1)
@@ -138,7 +169,6 @@ class CentroCustoApp:
         btn_abrir_graficos = ttk.Button(frame_acoes_principais, text="Análise Gráfica", command=self.abrir_janela_graficos, style="Info.TButton")
         btn_abrir_graficos.grid(row=0, column=0, columnspan=2, sticky='ew')
 
-        # Frame de Gestão de Empresas
         frame_empresas = ttk.LabelFrame(parent, text="Gestão de Empresas", padding=(10, 5))
         frame_empresas.pack(fill="x", padx=5, pady=5, side=tk.TOP)
         frame_empresas.columnconfigure(1, weight=1)
@@ -155,7 +185,6 @@ class CentroCustoApp:
         btn_add_empresa = ttk.Button(frame_empresas, text="Adicionar", command=self.adicionar_empresa, width=8)
         btn_add_empresa.grid(row=1, column=2, padx=5, pady=5)
 
-        # Frame de Gestão de Categorias
         frame_categorias = ttk.LabelFrame(parent, text="Gestão de Categorias", padding=(10, 5))
         frame_categorias.pack(fill="x", padx=5, pady=5, side=tk.TOP)
         frame_categorias.columnconfigure(1, weight=1)
@@ -170,8 +199,6 @@ class CentroCustoApp:
         btn_add_categoria = ttk.Button(frame_categorias, text="Adicionar", command=self.adicionar_categoria, width=8)
         btn_add_categoria.grid(row=1, column=2, padx=5)
 
-
-        # Frame de Gestão de Centros de Custo
         frame_add_cc = ttk.LabelFrame(parent, text="Gestão de Centros de Custo", padding=(10, 5))
         frame_add_cc.pack(fill="x", padx=5, pady=5, side=tk.TOP)
         frame_add_cc.columnconfigure(1, weight=1)
@@ -181,12 +208,10 @@ class CentroCustoApp:
         btn_add_cc = ttk.Button(frame_add_cc, text="Adicionar", command=self.adicionar_centro_custo, width=8)
         btn_add_cc.grid(row=0, column=2, padx=5)
 
-        # Botão de Lançamento (meio)
         btn_abrir_popup_lancamento = ttk.Button(parent, text="Adicionar Novo Lançamento", 
                                                 command=self.abrir_janela_novo_lancamento, style="Success.TButton")
         btn_abrir_popup_lancamento.pack(fill='x', padx=5, pady=20, ipady=10, side=tk.TOP)
 
-        # Painéis de Resumo e Ações (fundo)
         frame_acoes_globais = ttk.Frame(parent)
         frame_acoes_globais.pack(fill='x', padx=5, pady=(10, 5), side=tk.BOTTOM)
         btn_salvar = ttk.Button(frame_acoes_globais, text="Salvar Alterações", command=self.salvar_dados)
@@ -205,7 +230,6 @@ class CentroCustoApp:
         self.label_margem = ttk.Label(frame_resumo, textvariable=self.margem_lucro_var)
         self.label_margem.grid(row=3, column=1, sticky="w", padx=5, pady=(5,0))
         
-        # Painel de ferramentas de teste
         frame_ferramentas = ttk.LabelFrame(parent, text="Ferramentas de Teste", padding=(10, 5))
         frame_ferramentas.pack(fill="x", padx=5, pady=15, side=tk.BOTTOM)
         btn_gerar_dados = ttk.Button(frame_ferramentas, text="Gerar Dados de Teste", command=self.gerar_dados_teste)
@@ -216,20 +240,45 @@ class CentroCustoApp:
     def criar_painel_direito(self, parent):
         frame_relatorio = ttk.LabelFrame(parent, text="Registro de Lançamentos", padding=(10, 5))
         frame_relatorio.pack(fill="both", expand=True)
-        frame_filtros = ttk.Frame(frame_relatorio, padding=(0, 5))
-        frame_filtros.pack(fill='x')
-        ttk.Label(frame_filtros, text="De:").pack(side='left', padx=(0, 5))
-        self.date_inicio = DateEntry(frame_filtros, width=12, background='darkblue', foreground='white', borderwidth=2, date_pattern='dd/mm/yyyy')
+
+        frame_filtros_container = ttk.Frame(frame_relatorio, padding=(0, 5))
+        frame_filtros_container.pack(fill='x')
+
+        frame_filtros_linha1 = ttk.Frame(frame_filtros_container)
+        frame_filtros_linha1.pack(fill='x', pady=(0, 5))
+        ttk.Label(frame_filtros_linha1, text="De:").pack(side='left', padx=(0, 5))
+        self.date_inicio = DateEntry(frame_filtros_linha1, width=12, background='darkblue', foreground='white', borderwidth=2, date_pattern='dd/mm/yyyy')
         self.date_inicio.pack(side='left')
-        ttk.Label(frame_filtros, text="Até:").pack(side='left', padx=(10, 5))
-        self.date_fim = DateEntry(frame_filtros, width=12, background='darkblue', foreground='white', borderwidth=2, date_pattern='dd/mm/yyyy')
+        ttk.Label(frame_filtros_linha1, text="Até:").pack(side='left', padx=(10, 5))
+        self.date_fim = DateEntry(frame_filtros_linha1, width=12, background='darkblue', foreground='white', borderwidth=2, date_pattern='dd/mm/yyyy')
         self.date_fim.pack(side='left')
-        ttk.Label(frame_filtros, text="Pesquisar Descrição:").pack(side='left', padx=(10, 5))
-        self.entry_pesquisa = ttk.Entry(frame_filtros)
+        ttk.Label(frame_filtros_linha1, text="Pesquisar Descrição:").pack(side='left', padx=(10, 5))
+        self.entry_pesquisa = ttk.Entry(frame_filtros_linha1)
         self.entry_pesquisa.pack(side='left', fill='x', expand=True, padx=5)
         self.entry_pesquisa.bind("<KeyRelease>", lambda e: self.atualizar_relatorio())
-        btn_filtrar = ttk.Button(frame_filtros, text="Filtrar", command=self.atualizar_relatorio, width=8)
+
+        frame_filtros_linha2 = ttk.Frame(frame_filtros_container)
+        frame_filtros_linha2.pack(fill='x')
+        
+        ttk.Label(frame_filtros_linha2, text="Centro de Custo:").pack(side='left', padx=(0, 5))
+        self.combo_filtro_cc = ttk.Combobox(frame_filtros_linha2, state="readonly")
+        self.combo_filtro_cc.pack(side='left', padx=(0,10), fill='x', expand=True)
+        self.combo_filtro_cc.bind("<<ComboboxSelected>>", lambda e: self.atualizar_relatorio())
+
+        ttk.Label(frame_filtros_linha2, text="Categoria:").pack(side='left', padx=(0, 5))
+        self.combo_filtro_categoria = ttk.Combobox(frame_filtros_linha2, state="readonly")
+        self.combo_filtro_categoria.pack(side='left', padx=(0,10), fill='x', expand=True)
+        self.combo_filtro_categoria.bind("<<ComboboxSelected>>", lambda e: self.atualizar_relatorio())
+
+        ttk.Label(frame_filtros_linha2, text="Tipo:").pack(side='left', padx=(0, 5))
+        self.combo_filtro_tipo = ttk.Combobox(frame_filtros_linha2, values=["Todos", "Receita", "Despesa"], state="readonly")
+        self.combo_filtro_tipo.pack(side='left', padx=(0,10))
+        self.combo_filtro_tipo.set("Todos")
+        self.combo_filtro_tipo.bind("<<ComboboxSelected>>", lambda e: self.atualizar_relatorio())
+
+        btn_filtrar = ttk.Button(frame_filtros_linha2, text="Filtrar", command=self.atualizar_relatorio, width=8)
         btn_filtrar.pack(side='left', padx=5)
+
         tree_container = ttk.Frame(frame_relatorio)
         tree_container.pack(fill='both', expand=True, pady=(5,0))
         colunas_relatorio = ("data", "empresa", "centro_custo", "categoria", "descricao", "tipo", "valor")
@@ -259,16 +308,29 @@ class CentroCustoApp:
         frame_botoes.pack(side="bottom", pady=5, fill="x")
         btn_exportar = ttk.Button(frame_botoes, text="Exportar para Excel", command=self.exportar_para_excel)
         btn_exportar.pack(side="left", padx=5)
-        btn_limpar_tudo = ttk.Button(frame_botoes, text="Limpar Todos os Dados", command=self.limpar_tudo, style="Warning.TButton")
-        btn_limpar_tudo.pack(side="right", padx=5)
+        
+        btn_limpar_empresa = ttk.Button(frame_botoes, text="Limpar Lançamentos da Empresa", command=self.limpar_lancamentos_empresa, style="Danger.TButton")
+        btn_limpar_empresa.pack(side="right", padx=5)
+        
         btn_excluir_cc = ttk.Button(frame_botoes, text="Excluir Lançamento", command=self.excluir_lancamento_selecionado, style="Danger.TButton")
         btn_excluir_cc.pack(side="right", padx=5)
         
     def atualizar_contexto_empresa(self, event=None):
         empresa_ativa = self.combo_empresa_ativa.get()
         if empresa_ativa:
-            if empresa_ativa == "Empresa Padrão": self.btn_excluir_empresa.configure(state=tk.DISABLED)
-            else: self.btn_excluir_empresa.configure(state=tk.NORMAL)
+            if empresa_ativa == "Empresa Padrão":
+                self.btn_excluir_empresa.configure(state=tk.DISABLED)
+            else:
+                self.btn_excluir_empresa.configure(state=tk.NORMAL)
+            
+            centros_custo_empresa = ["Todos"] + self.dados_empresas.get(empresa_ativa, [])
+            self.combo_filtro_cc['values'] = centros_custo_empresa
+            self.combo_filtro_cc.set("Todos")
+
+            categorias_disponiveis = ["Todos"] + self.categorias
+            self.combo_filtro_categoria['values'] = categorias_disponiveis
+            self.combo_filtro_categoria.set("Todos")
+
             self.atualizar_relatorio()
 
     def adicionar_empresa(self):
@@ -285,7 +347,9 @@ class CentroCustoApp:
 
     def excluir_empresa_ativa(self):
         empresa_a_excluir = self.combo_empresa_ativa.get()
-        if empresa_a_excluir == "Empresa Padrão": return
+        if empresa_a_excluir == "Empresa Padrão":
+            return
+
         if messagebox.askyesno("Confirmar Exclusão", f"Excluir a empresa '{empresa_a_excluir}' e TODOS os seus dados?"):
             del self.dados_empresas[empresa_a_excluir]
             self.df_lancamentos = self.df_lancamentos[self.df_lancamentos['Empresa'] != empresa_a_excluir].reset_index(drop=True)
@@ -312,7 +376,8 @@ class CentroCustoApp:
         else:
             self.categorias.append(nova_categoria)
             self.atualizar_combobox_categorias()
-            self.entry_nova_categoria.delete(0, tk.END)
+            categorias_disponiveis = ["Todos"] + self.categorias
+            self.combo_filtro_categoria['values'] = categorias_disponiveis
             self.set_status(f"Categoria '{nova_categoria}' adicionada.")
 
     def excluir_categoria(self):
@@ -327,6 +392,9 @@ class CentroCustoApp:
             self.df_lancamentos.loc[self.df_lancamentos['Categoria'] == categoria_a_excluir, 'Categoria'] = 'Geral'
             self.categorias.remove(categoria_a_excluir)
             self.atualizar_combobox_categorias()
+            categorias_disponiveis = ["Todos"] + self.categorias
+            self.combo_filtro_categoria['values'] = categorias_disponiveis
+            self.combo_filtro_categoria.set("Todos")
             self.atualizar_relatorio()
             self.set_status(f"Categoria '{categoria_a_excluir}' excluída.")
 
@@ -406,26 +474,49 @@ class CentroCustoApp:
             self.atualizar_relatorio()
             self.set_status("Lançamento excluído.")
 
-    def limpar_tudo(self):
-        if messagebox.askyesno("Confirmar Limpeza Total", "Apagar TODOS os dados de TODAS as empresas?"):
-            self.df_lancamentos = pd.DataFrame(columns=self.colunas)
-            self.dados_empresas = {"Empresa Padrão": ["Geral"]}
-            self.categorias = ["Geral"]
-            self.atualizar_contexto_empresa()
-            self.atualizar_combobox_categorias()
-            self.set_status("Todos os dados foram limpos.")
+    def limpar_lancamentos_empresa(self):
+        """Apaga todos os lançamentos APENAS da empresa ativa no momento."""
+        empresa_ativa = self.combo_empresa_ativa.get()
+        if not empresa_ativa:
+            messagebox.showwarning("Ação Inválida", "Nenhuma empresa selecionada.", parent=self.root)
+            return
+
+        if messagebox.askyesno(
+            "Confirmar Limpeza de Lançamentos", 
+            f"Tem a certeza de que deseja apagar TODOS os lançamentos da empresa '{empresa_ativa}'?\n\nEsta ação não pode ser desfeita.",
+            parent=self.root
+        ):
+            self.df_lancamentos = self.df_lancamentos[self.df_lancamentos['Empresa'] != empresa_ativa].reset_index(drop=True)
+            self.atualizar_relatorio()
+            self.set_status(f"Lançamentos da empresa '{empresa_ativa}' foram apagados.")
     
     def _get_filtered_data(self):
         empresa_ativa = self.combo_empresa_ativa.get()
         if not empresa_ativa or self.df_lancamentos.empty:
             return pd.DataFrame(columns=self.colunas)
+        
         df_filtrado = self.df_lancamentos[self.df_lancamentos['Empresa'] == empresa_ativa].copy()
+        
         start_date = pd.to_datetime(self.date_inicio.get_date())
         end_date = pd.to_datetime(self.date_fim.get_date()).replace(hour=23, minute=59, second=59)
         df_filtrado = df_filtrado[(df_filtrado['Data'] >= start_date) & (df_filtrado['Data'] <= end_date)]
+        
         termo_pesquisa = self.entry_pesquisa.get().strip().lower()
         if termo_pesquisa:
             df_filtrado = df_filtrado[df_filtrado['Nome/Descrição'].str.lower().str.contains(termo_pesquisa)]
+        
+        filtro_cc = self.combo_filtro_cc.get()
+        if filtro_cc and filtro_cc != "Todos":
+            df_filtrado = df_filtrado[df_filtrado['Centro de Custo'] == filtro_cc]
+
+        filtro_cat = self.combo_filtro_categoria.get()
+        if filtro_cat and filtro_cat != "Todos":
+            df_filtrado = df_filtrado[df_filtrado['Categoria'] == filtro_cat]
+
+        filtro_tipo = self.combo_filtro_tipo.get()
+        if filtro_tipo and filtro_tipo != "Todos":
+            df_filtrado = df_filtrado[df_filtrado['Tipo'] == filtro_tipo]
+
         return df_filtrado
 
     def atualizar_relatorio(self):
@@ -605,14 +696,31 @@ class CentroCustoApp:
         df_plot = df.copy()
         df_plot['Mês'] = df_plot['Data'].dt.to_period('M')
         dados_agrupados = df_plot.groupby(['Mês', 'Tipo'])['Valor'].sum().unstack(fill_value=0)
+        
         fig, ax = plt.subplots(figsize=(10, 6))
-        dados_agrupados.plot(kind='bar', ax=ax, color=['green', 'red'])
+
+        color_map = {'Despesa': 'red', 'Receita': 'green'}
+        
+        colunas_ordenadas = []
+        if 'Despesa' in dados_agrupados.columns:
+            colunas_ordenadas.append('Despesa')
+        if 'Receita' in dados_agrupados.columns:
+            colunas_ordenadas.append('Receita')
+
+        if colunas_ordenadas:
+            dados_agrupados[colunas_ordenadas].plot(
+                kind='bar', 
+                ax=ax, 
+                color=[color_map[col] for col in colunas_ordenadas]
+            )
+
         ax.set_title("Receitas vs. Despesas Mensais")
         ax.set_xlabel("Mês")
         ax.set_ylabel("Valor (R$)")
         ax.tick_params(axis='x', rotation=45)
         ax.grid(axis='y', linestyle='--', alpha=0.7)
         fig.tight_layout()
+
         canvas = FigureCanvasTkAgg(fig, master=parent)
         canvas.draw()
         canvas.get_tk_widget().pack(fill='both', expand=True)
@@ -636,17 +744,14 @@ class CentroCustoApp:
         if not messagebox.askyesno("Confirmar", "Isto irá apagar todos os dados atuais e gerar um novo conjunto de dados de teste. Deseja continuar?"):
             return
 
-        # Limpar dados existentes
         self.df_lancamentos = pd.DataFrame(columns=self.colunas)
         
-        # Dados de teste
         self.dados_empresas = {
             "Tecnologia BR": ["Desenvolvimento", "Marketing Digital", "Infraestrutura"],
             "Varejo SP": ["Loja Centro", "Logística", "Administrativo"]
         }
         self.categorias = ["Software", "Hardware", "Publicidade", "Salários", "Fornecedores", "Vendas de Produtos", "Serviços", "Geral"]
 
-        # Gerar lançamentos de teste
         lancamentos = []
         hoje = datetime.now()
         data_mais_antiga = hoje - timedelta(days=365)
@@ -669,15 +774,15 @@ class CentroCustoApp:
 
         self.df_lancamentos = pd.DataFrame(lancamentos, columns=self.colunas)
 
-        # Atualizar toda a interface
         self.combo_empresa_ativa['values'] = list(self.dados_empresas.keys())
         self.combo_empresa_ativa.set(list(self.dados_empresas.keys())[0])
-        # ALTERADO: Atualiza as datas do filtro para mostrar os dados gerados
         self.date_inicio.set_date(data_mais_antiga)
         self.date_fim.set_date(hoje)
         self.atualizar_contexto_empresa()
         self.atualizar_combobox_categorias()
-        self.set_status("Dados de teste gerados com sucesso!")
+        
+        self.salvar_dados() 
+        self.set_status("Dados de teste gerados e guardados com sucesso!")
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -1,0 +1,16 @@
+# Ficheiros de dados gerados pelo aplicativo (NÃO ENVIAR!)
+lancamentos.csv
+empresas_data.json
+categorias.json
+config.json
+users.json
+
+# Diretório de cache e ambiente virtual do Python
+__pycache__/
+venv/
+.venv/
+env/
+.env
+
+# Ficheiros de pacotes do Python
+*.egg-info
