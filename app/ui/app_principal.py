@@ -1,4 +1,4 @@
-# app_principal.py
+# app/ui/app_principal.py
 # Contém a classe principal do aplicativo de gestão.
 
 import tkinter as tk
@@ -8,9 +8,11 @@ import pandas as pd
 from datetime import datetime, timedelta
 import random
 
-from data_manager import DataManager
-from ui_recorrencias import RecorrenciasManager
-from ui_graficos import GraficosManager
+# --- BLOCO DE IMPORTAÇÕES CORRIGIDO ---
+from app.core.data_manager import DataManager
+from app.ui.ui_recorrencias import RecorrenciasManager
+from app.ui.ui_graficos import GraficosManager
+# ------------------------------------
 
 class AppPrincipal:
     def __init__(self, root):

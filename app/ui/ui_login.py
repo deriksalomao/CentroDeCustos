@@ -11,7 +11,6 @@ class TelaLogin:
         self.root.title("Login - Sistema de Gestão Financeira")
         self.root.geometry("400x300")
         
-        # Mostra a janela de login (que estava escondida no main)
         self.root.deiconify()
         self.root.eval('tk::PlaceWindow . center')
 
