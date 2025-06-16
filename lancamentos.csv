@@ -1,151 +1,151 @@
 Data,Empresa,Centro de Custo,Categoria,Nome/Descrição,Tipo,Valor
-2025-06-04 12:03:52.242486,Varejo SP,Loja Centro,Fornecedores,Pagamento Fornecedor A,Despesa,7189.529343539057
-2025-04-02 12:03:52.242486,Varejo SP,Administrativo,Geral,Pagamento Fornecedor A,Despesa,5756.9792839604825
-2024-12-21 12:03:52.242486,Varejo SP,Administrativo,Fornecedores,Pagamento Aluguel C,Despesa,4547.131145084682
-2025-01-11 12:03:52.242486,Varejo SP,Logística,Salários,Venda Produto X #106,Receita,13021.344503161548
-2024-12-15 12:03:52.242486,Tecnologia BR,Desenvolvimento,Geral,Pagamento Aluguel C,Despesa,5080.819749937628
-2024-09-22 12:03:52.242486,Tecnologia BR,Infraestrutura,Publicidade,Pagamento Aluguel C,Despesa,4179.735801242984
-2024-10-28 12:03:52.242486,Varejo SP,Logística,Publicidade,Pagamento Software B,Despesa,751.1607097169689
-2025-02-27 12:03:52.242486,Varejo SP,Loja Centro,Software,Venda Contrato Z #473,Receita,7847.496721814009
-2024-12-30 12:03:52.242486,Varejo SP,Administrativo,Serviços,Pagamento Software B,Despesa,5838.6238476832195
-2024-08-13 12:03:52.242486,Tecnologia BR,Infraestrutura,Salários,Pagamento Fornecedor A,Despesa,3293.8027394411038
-2025-03-31 12:03:52.242486,Varejo SP,Loja Centro,Fornecedores,Pagamento Aluguel C,Despesa,2348.9349611605685
-2025-06-03 12:03:52.242486,Tecnologia BR,Marketing Digital,Serviços,Pagamento Aluguel C,Despesa,1602.8522339627611
-2024-08-12 12:03:52.242486,Varejo SP,Loja Centro,Salários,Pagamento Fornecedor A,Despesa,4044.1318099605974
-2024-06-26 12:03:52.242486,Varejo SP,Logística,Serviços,Pagamento Fornecedor A,Despesa,5809.73150960415
-2024-07-29 12:03:52.242486,Tecnologia BR,Infraestrutura,Salários,Venda Produto X #855,Receita,1739.6113396195162
-2024-10-02 12:03:52.242486,Tecnologia BR,Infraestrutura,Fornecedores,Pagamento Aluguel C,Despesa,7770.387545391787
-2025-01-14 12:03:52.242486,Varejo SP,Administrativo,Salários,Venda Produto X #775,Receita,5266.523250160584
-2025-04-17 12:03:52.242486,Varejo SP,Administrativo,Geral,Pagamento Fornecedor A,Despesa,464.00981543567855
-2024-10-29 12:03:52.242486,Tecnologia BR,Marketing Digital,Fornecedores,Venda Serviço Y #596,Receita,10876.219982504152
-2025-06-16 12:03:52.242486,Varejo SP,Logística,Publicidade,Pagamento Aluguel C,Despesa,3734.8465716385726
-2025-01-12 12:03:52.242486,Tecnologia BR,Infraestrutura,Geral,Pagamento Aluguel C,Despesa,2440.5355700675136
-2025-01-21 12:03:52.242486,Tecnologia BR,Desenvolvimento,Geral,Pagamento Aluguel C,Despesa,3695.758279718945
-2024-07-16 12:03:52.242486,Varejo SP,Loja Centro,Vendas de Produtos,Pagamento Software B,Despesa,1317.8065763901309
-2024-09-26 12:03:52.242486,Tecnologia BR,Infraestrutura,Hardware,Venda Produto X #929,Receita,7140.411701271278
-2024-08-24 12:03:52.242486,Varejo SP,Administrativo,Publicidade,Venda Contrato Z #497,Receita,7729.148498606906
-2024-06-26 12:03:52.242486,Varejo SP,Administrativo,Software,Pagamento Aluguel C,Despesa,6247.128053089855
-2025-05-23 12:03:52.242486,Varejo SP,Logística,Software,Pagamento Fornecedor A,Despesa,3161.3261623444987
-2025-03-21 12:03:52.242486,Tecnologia BR,Infraestrutura,Hardware,Venda Produto X #926,Receita,14830.743132439533
-2025-04-03 12:03:52.242486,Varejo SP,Administrativo,Serviços,Pagamento Fornecedor A,Despesa,6096.8303626628185
-2024-10-03 12:03:52.242486,Varejo SP,Logística,Hardware,Pagamento Software B,Despesa,7815.82582189927
-2024-07-21 12:03:52.242486,Tecnologia BR,Marketing Digital,Geral,Pagamento Aluguel C,Despesa,1348.0808009001587
-2025-04-07 12:03:52.242486,Varejo SP,Loja Centro,Fornecedores,Pagamento Software B,Despesa,4305.218082092848
-2025-03-29 12:03:52.242486,Varejo SP,Loja Centro,Publicidade,Pagamento Aluguel C,Despesa,7592.527149944176
-2025-03-31 12:03:52.242486,Tecnologia BR,Desenvolvimento,Vendas de Produtos,Pagamento Fornecedor A,Despesa,1612.4725058004224
-2024-09-20 12:03:52.242486,Tecnologia BR,Marketing Digital,Publicidade,Venda Produto X #897,Receita,832.831680735138
-2024-08-02 12:03:52.242486,Varejo SP,Administrativo,Serviços,Pagamento Fornecedor A,Despesa,4286.4838106723555
-2024-09-26 12:03:52.242486,Tecnologia BR,Marketing Digital,Software,Pagamento Fornecedor A,Despesa,6741.8117362510375
-2024-11-18 12:03:52.242486,Tecnologia BR,Desenvolvimento,Salários,Pagamento Software B,Despesa,5797.8228181889945
-2024-07-13 12:03:52.242486,Varejo SP,Loja Centro,Salários,Pagamento Software B,Despesa,3559.715947954638
-2025-06-04 12:03:52.242486,Varejo SP,Administrativo,Hardware,Pagamento Software B,Despesa,6958.241746744953
-2024-10-06 12:03:52.242486,Varejo SP,Logística,Software,Pagamento Aluguel C,Despesa,3566.8361977132686
-2024-08-14 12:03:52.242486,Varejo SP,Administrativo,Serviços,Pagamento Software B,Despesa,3914.336571799977
-2024-11-17 12:03:52.242486,Varejo SP,Logística,Software,Venda Produto X #649,Receita,5378.564153748228
-2025-05-23 12:03:52.242486,Varejo SP,Loja Centro,Fornecedores,Pagamento Software B,Despesa,2527.691957760968
-2024-10-30 12:03:52.242486,Varejo SP,Administrativo,Serviços,Pagamento Software B,Despesa,3779.3366046343535
-2024-06-24 12:03:52.242486,Varejo SP,Logística,Fornecedores,Pagamento Fornecedor A,Despesa,754.6574580151417
-2025-04-04 12:03:52.242486,Tecnologia BR,Desenvolvimento,Serviços,Pagamento Aluguel C,Despesa,5276.650892220178
-2024-08-14 12:03:52.242486,Varejo SP,Administrativo,Hardware,Venda Contrato Z #216,Receita,6248.161022907937
-2024-06-17 12:03:52.242486,Tecnologia BR,Infraestrutura,Salários,Pagamento Fornecedor A,Despesa,675.6777441002164
-2024-10-03 12:03:52.242486,Tecnologia BR,Desenvolvimento,Fornecedores,Pagamento Fornecedor A,Despesa,1966.1045886694235
-2024-12-26 12:03:52.242486,Varejo SP,Administrativo,Software,Pagamento Software B,Despesa,6827.521284934897
-2025-02-22 12:03:52.242486,Tecnologia BR,Desenvolvimento,Hardware,Pagamento Software B,Despesa,2781.832363043251
-2024-08-26 12:03:52.242486,Tecnologia BR,Infraestrutura,Salários,Pagamento Software B,Despesa,2959.5250084782615
-2025-04-29 12:03:52.242486,Tecnologia BR,Marketing Digital,Serviços,Pagamento Software B,Despesa,4099.932449801449
-2024-12-10 12:03:52.242486,Varejo SP,Logística,Geral,Venda Produto X #748,Receita,14262.204889524663
-2024-12-18 12:03:52.242486,Varejo SP,Administrativo,Publicidade,Pagamento Aluguel C,Despesa,7388.441403807631
-2025-05-13 12:03:52.242486,Varejo SP,Loja Centro,Software,Pagamento Fornecedor A,Despesa,4260.8637346263
-2024-08-02 12:03:52.242486,Varejo SP,Administrativo,Geral,Pagamento Fornecedor A,Despesa,1119.648239653342
-2025-04-26 12:03:52.242486,Varejo SP,Loja Centro,Vendas de Produtos,Venda Serviço Y #790,Receita,853.3058970991369
-2025-02-13 12:03:52.242486,Tecnologia BR,Infraestrutura,Publicidade,Venda Contrato Z #951,Receita,6890.147726217822
-2024-09-16 12:03:52.242486,Tecnologia BR,Marketing Digital,Hardware,Venda Contrato Z #150,Receita,10771.039433922393
-2025-01-25 12:03:52.242486,Varejo SP,Loja Centro,Hardware,Venda Produto X #401,Receita,4278.686999013769
-2025-01-04 12:03:52.242486,Varejo SP,Logística,Fornecedores,Venda Produto X #642,Receita,7647.182529843658
-2025-04-02 12:03:52.242486,Tecnologia BR,Desenvolvimento,Fornecedores,Pagamento Fornecedor A,Despesa,6492.053348040256
-2024-12-14 12:03:52.242486,Varejo SP,Logística,Geral,Venda Produto X #203,Receita,7890.790295969134
-2025-02-18 12:03:52.242486,Varejo SP,Logística,Fornecedores,Venda Contrato Z #858,Receita,13490.147538322999
-2025-05-21 12:03:52.242486,Tecnologia BR,Desenvolvimento,Publicidade,Pagamento Aluguel C,Despesa,3883.8049133839972
-2025-04-13 12:03:52.242486,Tecnologia BR,Desenvolvimento,Vendas de Produtos,Venda Serviço Y #709,Receita,5636.775149420625
-2024-12-03 12:03:52.242486,Varejo SP,Administrativo,Serviços,Pagamento Software B,Despesa,4133.357422217987
-2025-01-18 12:03:52.242486,Varejo SP,Loja Centro,Hardware,Pagamento Fornecedor A,Despesa,5795.814907588252
-2024-06-24 12:03:52.242486,Tecnologia BR,Marketing Digital,Fornecedores,Venda Contrato Z #855,Receita,1086.6832966468237
-2024-09-10 12:03:52.242486,Varejo SP,Loja Centro,Serviços,Pagamento Fornecedor A,Despesa,3273.7268002140386
-2025-04-14 12:03:52.242486,Varejo SP,Logística,Publicidade,Pagamento Aluguel C,Despesa,3074.834517732362
-2024-10-15 12:03:52.242486,Varejo SP,Loja Centro,Salários,Pagamento Software B,Despesa,2408.50985990661
-2025-02-17 12:03:52.242486,Varejo SP,Loja Centro,Publicidade,Pagamento Software B,Despesa,1804.1318339689717
-2025-01-25 12:03:52.242486,Varejo SP,Administrativo,Software,Pagamento Aluguel C,Despesa,7225.378381468462
-2025-03-30 12:03:52.242486,Tecnologia BR,Infraestrutura,Geral,Pagamento Fornecedor A,Despesa,5212.404501314611
-2024-06-21 12:03:52.242486,Tecnologia BR,Marketing Digital,Salários,Venda Contrato Z #763,Receita,1574.8384444347967
-2024-07-03 12:03:52.242486,Tecnologia BR,Desenvolvimento,Salários,Pagamento Aluguel C,Despesa,7585.041030928278
-2025-05-06 12:03:52.242486,Varejo SP,Logística,Vendas de Produtos,Venda Produto X #237,Receita,5868.300176468773
-2024-06-23 12:03:52.242486,Varejo SP,Loja Centro,Hardware,Pagamento Fornecedor A,Despesa,3686.2986804275024
-2024-10-14 12:03:52.242486,Varejo SP,Administrativo,Salários,Venda Produto X #238,Receita,7337.724833656254
-2024-06-17 12:03:52.242486,Tecnologia BR,Marketing Digital,Salários,Pagamento Software B,Despesa,5572.574354580785
-2025-03-27 12:03:52.242486,Tecnologia BR,Desenvolvimento,Salários,Venda Serviço Y #820,Receita,9331.098426133185
-2024-10-06 12:03:52.242486,Tecnologia BR,Desenvolvimento,Fornecedores,Pagamento Fornecedor A,Despesa,2324.9197291720843
-2024-10-31 12:03:52.242486,Varejo SP,Administrativo,Publicidade,Venda Contrato Z #409,Receita,5480.527622103297
-2024-11-24 12:03:52.242486,Tecnologia BR,Desenvolvimento,Serviços,Venda Contrato Z #602,Receita,7372.265544147137
-2024-07-11 12:03:52.242486,Tecnologia BR,Desenvolvimento,Hardware,Venda Contrato Z #914,Receita,11653.358360220655
-2025-02-05 12:03:52.242486,Varejo SP,Logística,Vendas de Produtos,Pagamento Software B,Despesa,715.6673632282437
-2024-08-28 12:03:52.242486,Tecnologia BR,Infraestrutura,Hardware,Pagamento Aluguel C,Despesa,786.6586591833561
-2024-08-10 12:03:52.242486,Tecnologia BR,Infraestrutura,Geral,Venda Contrato Z #319,Receita,8451.587669589875
-2024-11-01 12:03:52.242486,Varejo SP,Loja Centro,Vendas de Produtos,Pagamento Fornecedor A,Despesa,4365.095377278443
-2025-05-27 12:03:52.242486,Tecnologia BR,Marketing Digital,Software,Pagamento Software B,Despesa,434.04304861684585
-2024-09-23 12:03:52.242486,Varejo SP,Loja Centro,Fornecedores,Pagamento Aluguel C,Despesa,1258.1503675536205
-2024-09-14 12:03:52.242486,Varejo SP,Loja Centro,Hardware,Pagamento Fornecedor A,Despesa,772.4339203938263
-2024-09-20 12:03:52.242486,Tecnologia BR,Infraestrutura,Publicidade,Pagamento Fornecedor A,Despesa,2472.2263653171512
-2024-08-25 12:03:52.242486,Varejo SP,Administrativo,Geral,Pagamento Aluguel C,Despesa,2741.2214025617945
-2024-06-27 12:03:52.242486,Varejo SP,Logística,Publicidade,Pagamento Software B,Despesa,7620.633890981849
-2024-08-07 12:03:52.242486,Varejo SP,Logística,Vendas de Produtos,Pagamento Fornecedor A,Despesa,2582.6498676054593
-2024-07-20 12:03:52.242486,Tecnologia BR,Desenvolvimento,Hardware,Venda Produto X #962,Receita,3614.736111081919
-2025-03-28 12:03:52.242486,Varejo SP,Loja Centro,Vendas de Produtos,Pagamento Software B,Despesa,6593.916627053732
-2024-11-09 12:03:52.242486,Tecnologia BR,Marketing Digital,Fornecedores,Pagamento Fornecedor A,Despesa,1644.213498410902
-2024-07-04 12:03:52.242486,Varejo SP,Loja Centro,Publicidade,Venda Produto X #186,Receita,3754.862649775911
-2024-10-15 12:03:52.242486,Varejo SP,Administrativo,Software,Pagamento Fornecedor A,Despesa,4514.407534065878
-2025-02-02 12:03:52.242486,Varejo SP,Logística,Software,Pagamento Aluguel C,Despesa,7409.343423987264
-2025-03-28 12:03:52.242486,Varejo SP,Logística,Geral,Pagamento Fornecedor A,Despesa,967.2937708313789
-2024-08-06 12:03:52.242486,Varejo SP,Administrativo,Software,Venda Produto X #965,Receita,8473.03536486211
-2024-09-26 12:03:52.242486,Varejo SP,Loja Centro,Publicidade,Pagamento Fornecedor A,Despesa,5115.495943555775
-2024-06-18 12:03:52.242486,Tecnologia BR,Marketing Digital,Fornecedores,Pagamento Aluguel C,Despesa,7926.46607795948
-2025-01-29 12:03:52.242486,Tecnologia BR,Infraestrutura,Software,Venda Contrato Z #502,Receita,7339.954775935717
-2024-09-08 12:03:52.242486,Tecnologia BR,Marketing Digital,Software,Pagamento Fornecedor A,Despesa,233.0582515334904
-2024-12-18 12:03:52.242486,Tecnologia BR,Infraestrutura,Geral,Pagamento Fornecedor A,Despesa,4047.912305022267
-2025-03-05 12:03:52.242486,Varejo SP,Logística,Fornecedores,Venda Serviço Y #815,Receita,13580.823096208253
-2024-12-29 12:03:52.242486,Varejo SP,Logística,Vendas de Produtos,Venda Serviço Y #454,Receita,14255.836838705667
-2025-03-28 12:03:52.242486,Varejo SP,Administrativo,Salários,Pagamento Software B,Despesa,3819.6830933811298
-2024-12-11 12:03:52.242486,Tecnologia BR,Desenvolvimento,Publicidade,Pagamento Software B,Despesa,4331.457708313997
-2025-01-21 12:03:52.242486,Varejo SP,Administrativo,Salários,Pagamento Software B,Despesa,6960.824082117146
-2024-09-22 12:03:52.242486,Varejo SP,Logística,Fornecedores,Pagamento Software B,Despesa,4401.594043555714
-2025-01-25 12:03:52.242486,Varejo SP,Administrativo,Publicidade,Pagamento Fornecedor A,Despesa,7913.6728415745265
-2025-01-19 12:03:52.242486,Tecnologia BR,Marketing Digital,Geral,Pagamento Software B,Despesa,6372.421265236817
-2024-10-26 12:03:52.242486,Tecnologia BR,Marketing Digital,Publicidade,Venda Serviço Y #212,Receita,11480.637527488447
-2025-01-15 12:03:52.242486,Varejo SP,Logística,Serviços,Pagamento Aluguel C,Despesa,4696.500312772768
-2024-11-15 12:03:52.242486,Tecnologia BR,Infraestrutura,Hardware,Pagamento Fornecedor A,Despesa,2915.4469084499606
-2025-05-11 12:03:52.242486,Varejo SP,Loja Centro,Vendas de Produtos,Pagamento Fornecedor A,Despesa,7172.067787485664
-2025-05-03 12:03:52.242486,Tecnologia BR,Infraestrutura,Vendas de Produtos,Venda Produto X #689,Receita,8302.395348563707
-2024-12-01 12:03:52.242486,Tecnologia BR,Marketing Digital,Publicidade,Pagamento Software B,Despesa,4479.505983346016
-2025-01-10 12:03:52.242486,Tecnologia BR,Desenvolvimento,Salários,Pagamento Software B,Despesa,7063.177958206091
-2024-09-12 12:03:52.242486,Varejo SP,Loja Centro,Software,Pagamento Aluguel C,Despesa,802.2779665848659
-2024-09-27 12:03:52.242486,Varejo SP,Logística,Serviços,Pagamento Aluguel C,Despesa,1287.6465660565266
-2025-01-29 12:03:52.242486,Varejo SP,Logística,Fornecedores,Venda Produto X #233,Receita,9512.369860944258
-2024-10-30 12:03:52.242486,Varejo SP,Administrativo,Salários,Venda Serviço Y #625,Receita,5304.997098454515
-2024-09-29 12:03:52.242486,Tecnologia BR,Desenvolvimento,Software,Pagamento Aluguel C,Despesa,2787.9043453554355
-2025-05-12 12:03:52.242486,Tecnologia BR,Desenvolvimento,Salários,Pagamento Fornecedor A,Despesa,4707.683269547035
-2025-01-05 12:03:52.242486,Varejo SP,Loja Centro,Software,Venda Contrato Z #951,Receita,10105.486101246044
-2024-12-18 12:03:52.242486,Tecnologia BR,Desenvolvimento,Software,Pagamento Software B,Despesa,4372.318735677868
-2025-05-19 12:03:52.242486,Varejo SP,Logística,Salários,Pagamento Software B,Despesa,7943.863013803454
-2024-12-14 12:03:52.242486,Tecnologia BR,Marketing Digital,Publicidade,Pagamento Fornecedor A,Despesa,1291.0674909021543
-2024-12-27 12:03:52.242486,Tecnologia BR,Marketing Digital,Hardware,Pagamento Software B,Despesa,5264.885096545521
-2025-03-26 12:03:52.242486,Tecnologia BR,Desenvolvimento,Vendas de Produtos,Pagamento Aluguel C,Despesa,4816.389708044015
-2025-03-04 12:03:52.242486,Varejo SP,Loja Centro,Serviços,Pagamento Software B,Despesa,4705.63865106003
-2025-06-16 12:03:52.242486,Varejo SP,Loja Centro,Geral,Pagamento Fornecedor A,Despesa,1483.0670649816382
-2025-05-01 12:03:52.242486,Varejo SP,Logística,Publicidade,Pagamento Aluguel C,Despesa,4940.211996482162
-2024-12-22 12:03:52.242486,Varejo SP,Loja Centro,Hardware,Pagamento Software B,Despesa,1902.2954947914263
-2025-05-07 12:03:52.242486,Varejo SP,Loja Centro,Vendas de Produtos,Pagamento Fornecedor A,Despesa,4875.738159142975
-2025-03-02 12:03:52.242486,Varejo SP,Loja Centro,Salários,Pagamento Software B,Despesa,1921.6361020554377
-2024-11-26 12:03:52.242486,Varejo SP,Logística,Hardware,Venda Serviço Y #699,Receita,14233.052273811349
-2024-08-28 12:03:52.242486,Tecnologia BR,Marketing Digital,Hardware,Pagamento Software B,Despesa,561.5558255358145
-2024-11-03 12:03:52.242486,Tecnologia BR,Infraestrutura,Publicidade,Venda Produto X #416,Receita,4047.352856098487
-2024-09-13 12:03:52.242486,Varejo SP,Loja Centro,Salários,Pagamento Aluguel C,Despesa,2000.413448811763
-2025-05-19 12:03:52.242486,Varejo SP,Loja Centro,Fornecedores,Venda Serviço Y #669,Receita,10994.916392647947
+2024-07-16 12:23:31.090433,Tecnologia BR,Marketing,Vendas,Pagamento Software Y,Despesa,2612.353324626713
+2024-12-03 12:23:31.090433,Varejo SP,Logística,Serviços,Venda Serviço B #358,Receita,4682.781583476029
+2025-01-27 12:23:31.090433,Tecnologia BR,Marketing,Salários,Pagamento Software Y,Despesa,6799.204739680384
+2025-05-10 12:23:31.090433,Varejo SP,Administrativo,Salários,Pagamento Software Y,Despesa,4456.261133975911
+2025-05-10 12:23:31.090433,Varejo SP,Loja Centro,Salários,Venda Produto A #971,Receita,2816.725145224704
+2024-09-20 12:23:31.090433,Tecnologia BR,Desenvolvimento,Salários,Pagamento Fornecedor X,Despesa,2070.2782778604947
+2025-06-03 12:23:31.090433,Tecnologia BR,Marketing,Salários,Pagamento Fornecedor X,Despesa,2303.6308755281607
+2025-01-23 12:23:31.090433,Tecnologia BR,Infraestrutura,Fornecedores,Venda Serviço B #707,Receita,8127.302646836941
+2024-06-20 12:23:31.090433,Tecnologia BR,Infraestrutura,Vendas,Pagamento Fornecedor X,Despesa,5916.039811919772
+2024-06-24 12:23:31.090433,Tecnologia BR,Desenvolvimento,Salários,Venda Serviço B #689,Receita,14004.014907050068
+2024-12-24 12:23:31.090433,Tecnologia BR,Desenvolvimento,Hardware,Pagamento Fornecedor X,Despesa,5273.791721415039
+2024-09-11 12:23:31.090433,Tecnologia BR,Desenvolvimento,Vendas,Venda Serviço B #634,Receita,14518.456214617252
+2025-01-25 12:23:31.090433,Varejo SP,Loja Centro,Hardware,Pagamento Fornecedor X,Despesa,883.8300027331553
+2025-03-09 12:23:31.090433,Varejo SP,Loja Centro,Salários,Pagamento Software Y,Despesa,1302.3421471819047
+2025-01-03 12:23:31.090433,Tecnologia BR,Infraestrutura,Publicidade,Pagamento Fornecedor X,Despesa,3309.386715933201
+2025-01-23 12:23:31.090433,Varejo SP,Logística,Hardware,Pagamento Fornecedor X,Despesa,2414.502285336092
+2024-09-23 12:23:31.090433,Varejo SP,Logística,Software,Pagamento Software Y,Despesa,6969.608655296046
+2024-06-24 12:23:31.090433,Tecnologia BR,Marketing,Software,Pagamento Fornecedor X,Despesa,1805.746236947669
+2024-09-04 12:23:31.090433,Varejo SP,Loja Centro,Geral,Pagamento Fornecedor X,Despesa,2422.463381413789
+2024-11-28 12:23:31.090433,Tecnologia BR,Infraestrutura,Geral,Pagamento Software Y,Despesa,1890.9435584181208
+2025-06-16 12:23:31.090433,Tecnologia BR,Infraestrutura,Geral,Venda Produto A #478,Receita,1082.6735246384608
+2024-07-10 12:23:31.090433,Varejo SP,Administrativo,Salários,Venda Produto A #700,Receita,2032.6645003810297
+2024-11-18 12:23:31.090433,Varejo SP,Loja Centro,Serviços,Pagamento Fornecedor X,Despesa,343.90259141224567
+2024-12-02 12:23:31.090433,Varejo SP,Loja Centro,Geral,Pagamento Fornecedor X,Despesa,5706.492742838454
+2024-09-17 12:23:31.090433,Tecnologia BR,Desenvolvimento,Serviços,Pagamento Fornecedor X,Despesa,7190.051858351424
+2025-03-12 12:23:31.090433,Tecnologia BR,Marketing,Vendas,Venda Produto A #640,Receita,13206.609392587518
+2024-08-25 12:23:31.090433,Varejo SP,Loja Centro,Geral,Venda Produto A #673,Receita,7956.722128506264
+2024-06-28 12:23:31.090433,Varejo SP,Administrativo,Software,Venda Produto A #852,Receita,7761.768769385107
+2024-12-05 12:23:31.090433,Tecnologia BR,Marketing,Vendas,Pagamento Fornecedor X,Despesa,3005.948365948372
+2024-09-08 12:23:31.090433,Varejo SP,Administrativo,Hardware,Pagamento Software Y,Despesa,5739.084776310869
+2024-07-06 12:23:31.090433,Varejo SP,Logística,Vendas,Venda Produto A #649,Receita,2422.9708525501346
+2025-01-14 12:23:31.090433,Varejo SP,Logística,Vendas,Pagamento Fornecedor X,Despesa,4262.099709255712
+2024-11-28 12:23:31.090433,Varejo SP,Administrativo,Publicidade,Pagamento Software Y,Despesa,6795.932531829203
+2024-11-21 12:23:31.090433,Tecnologia BR,Marketing,Publicidade,Pagamento Fornecedor X,Despesa,195.2506430338542
+2025-03-02 12:23:31.090433,Varejo SP,Administrativo,Hardware,Venda Serviço B #569,Receita,10268.546250350708
+2025-02-25 12:23:31.090433,Tecnologia BR,Marketing,Fornecedores,Pagamento Software Y,Despesa,427.3989519249063
+2025-06-12 12:23:31.090433,Tecnologia BR,Desenvolvimento,Geral,Venda Produto A #601,Receita,2728.671737091004
+2025-04-19 12:23:31.090433,Tecnologia BR,Marketing,Salários,Venda Produto A #561,Receita,8408.908110429948
+2024-10-27 12:23:31.090433,Tecnologia BR,Marketing,Publicidade,Pagamento Fornecedor X,Despesa,3059.406570292741
+2025-06-03 12:23:31.090433,Tecnologia BR,Infraestrutura,Software,Venda Produto A #579,Receita,12066.388836223236
+2024-08-30 12:23:31.090433,Varejo SP,Administrativo,Geral,Venda Produto A #185,Receita,14601.537035030638
+2025-01-13 12:23:31.090433,Tecnologia BR,Desenvolvimento,Fornecedores,Pagamento Fornecedor X,Despesa,1369.9355927431664
+2025-03-10 12:23:31.090433,Varejo SP,Administrativo,Vendas,Pagamento Fornecedor X,Despesa,2835.3298234473277
+2025-04-01 12:23:31.090433,Tecnologia BR,Marketing,Hardware,Venda Serviço B #286,Receita,4895.032630628943
+2024-10-15 12:23:31.090433,Varejo SP,Loja Centro,Salários,Pagamento Fornecedor X,Despesa,1922.1443567513636
+2025-06-13 12:23:31.090433,Tecnologia BR,Infraestrutura,Fornecedores,Venda Serviço B #522,Receita,8030.309099532754
+2024-12-28 12:23:31.090433,Varejo SP,Loja Centro,Publicidade,Pagamento Software Y,Despesa,7910.296835688355
+2025-05-28 12:23:31.090433,Varejo SP,Logística,Salários,Pagamento Software Y,Despesa,2678.13712854504
+2025-06-01 12:23:31.090433,Tecnologia BR,Marketing,Salários,Pagamento Software Y,Despesa,6341.089862830218
+2024-07-31 12:23:31.090433,Tecnologia BR,Infraestrutura,Fornecedores,Venda Serviço B #714,Receita,7563.189520221289
+2025-06-10 12:23:31.090433,Tecnologia BR,Desenvolvimento,Fornecedores,Venda Produto A #732,Receita,14522.682904855175
+2024-08-21 12:23:31.090433,Tecnologia BR,Infraestrutura,Salários,Pagamento Fornecedor X,Despesa,2366.330275046241
+2025-01-26 12:23:31.090433,Tecnologia BR,Desenvolvimento,Vendas,Venda Produto A #499,Receita,14367.794620421551
+2025-02-11 12:23:31.090433,Tecnologia BR,Infraestrutura,Software,Venda Produto A #707,Receita,3771.371480169181
+2025-04-09 12:23:31.090433,Tecnologia BR,Desenvolvimento,Fornecedores,Venda Serviço B #262,Receita,3675.911513486142
+2025-01-12 12:23:31.090433,Tecnologia BR,Desenvolvimento,Salários,Venda Produto A #754,Receita,2360.4040002269667
+2025-04-20 12:23:31.090433,Tecnologia BR,Marketing,Publicidade,Venda Produto A #955,Receita,7240.643286126299
+2025-05-12 12:23:31.090433,Tecnologia BR,Desenvolvimento,Hardware,Pagamento Fornecedor X,Despesa,7887.439367771308
+2025-05-19 12:23:31.090433,Varejo SP,Logística,Salários,Pagamento Fornecedor X,Despesa,1682.9465378444197
+2024-07-24 12:23:31.090433,Tecnologia BR,Marketing,Vendas,Pagamento Fornecedor X,Despesa,6242.166356062674
+2024-11-11 12:23:31.090433,Varejo SP,Loja Centro,Geral,Pagamento Software Y,Despesa,7201.379563488659
+2024-08-07 12:23:31.090433,Tecnologia BR,Infraestrutura,Hardware,Venda Produto A #475,Receita,1748.7980837360192
+2024-07-13 12:23:31.090433,Tecnologia BR,Marketing,Fornecedores,Venda Serviço B #715,Receita,3190.966755426335
+2024-08-24 12:23:31.090433,Tecnologia BR,Infraestrutura,Fornecedores,Pagamento Software Y,Despesa,3260.237219576325
+2025-05-21 12:23:31.090433,Tecnologia BR,Marketing,Software,Pagamento Fornecedor X,Despesa,2388.6143814807524
+2024-08-18 12:23:31.090433,Varejo SP,Loja Centro,Fornecedores,Venda Produto A #545,Receita,9223.142651317048
+2025-02-02 12:23:31.090433,Varejo SP,Administrativo,Geral,Pagamento Fornecedor X,Despesa,2837.841979369725
+2024-11-17 12:23:31.090433,Varejo SP,Loja Centro,Publicidade,Pagamento Software Y,Despesa,7512.961621690405
+2025-01-21 12:23:31.090433,Tecnologia BR,Desenvolvimento,Salários,Venda Produto A #183,Receita,2515.397328906549
+2025-05-12 12:23:31.090433,Varejo SP,Loja Centro,Software,Venda Produto A #855,Receita,5113.196438683838
+2024-07-18 12:23:31.090433,Varejo SP,Administrativo,Publicidade,Pagamento Fornecedor X,Despesa,7026.82229464025
+2025-01-09 12:23:31.090433,Varejo SP,Logística,Serviços,Venda Produto A #799,Receita,14958.342344264962
+2025-05-24 12:23:31.090433,Tecnologia BR,Desenvolvimento,Fornecedores,Pagamento Fornecedor X,Despesa,4250.790522712028
+2025-02-25 12:23:31.090433,Varejo SP,Loja Centro,Geral,Pagamento Software Y,Despesa,3925.4936138152993
+2025-03-14 12:23:31.090433,Tecnologia BR,Infraestrutura,Hardware,Venda Serviço B #892,Receita,3078.618708384477
+2025-05-06 12:23:31.090433,Tecnologia BR,Desenvolvimento,Serviços,Venda Serviço B #199,Receita,13962.103408349212
+2025-04-04 12:23:31.090433,Tecnologia BR,Marketing,Vendas,Pagamento Fornecedor X,Despesa,3656.9256712445554
+2025-05-17 12:23:31.090433,Varejo SP,Administrativo,Fornecedores,Pagamento Software Y,Despesa,4388.5535027772885
+2025-02-11 12:23:31.090433,Tecnologia BR,Infraestrutura,Geral,Venda Serviço B #298,Receita,11783.85569410995
+2024-10-30 12:23:31.090433,Varejo SP,Logística,Serviços,Pagamento Software Y,Despesa,4469.270967780941
+2024-12-04 12:23:31.090433,Tecnologia BR,Marketing,Salários,Venda Serviço B #931,Receita,12713.960530951465
+2025-01-25 12:23:31.090433,Varejo SP,Administrativo,Hardware,Pagamento Software Y,Despesa,2441.78849446526
+2024-12-03 12:23:31.090433,Varejo SP,Loja Centro,Hardware,Pagamento Software Y,Despesa,4336.436846827389
+2025-02-17 12:23:31.090433,Varejo SP,Administrativo,Salários,Venda Serviço B #572,Receita,11330.40489941364
+2024-09-30 12:23:31.090433,Varejo SP,Loja Centro,Salários,Pagamento Fornecedor X,Despesa,2259.2868750506877
+2024-11-13 12:23:31.090433,Varejo SP,Loja Centro,Publicidade,Venda Serviço B #794,Receita,12270.305132636238
+2025-02-08 12:23:31.090433,Tecnologia BR,Desenvolvimento,Vendas,Pagamento Software Y,Despesa,1172.1952912199326
+2024-12-12 12:23:31.090433,Tecnologia BR,Desenvolvimento,Salários,Pagamento Fornecedor X,Despesa,595.8000215569505
+2024-12-14 12:23:31.090433,Tecnologia BR,Marketing,Publicidade,Pagamento Software Y,Despesa,2734.06687229862
+2025-01-15 12:23:31.090433,Tecnologia BR,Marketing,Vendas,Pagamento Software Y,Despesa,4380.746852535583
+2025-05-31 12:23:31.090433,Varejo SP,Administrativo,Publicidade,Venda Produto A #314,Receita,1904.906925557382
+2024-10-02 12:23:31.090433,Tecnologia BR,Marketing,Serviços,Venda Produto A #318,Receita,1372.9346287694034
+2025-04-05 12:23:31.090433,Varejo SP,Loja Centro,Software,Pagamento Fornecedor X,Despesa,5392.353392518622
+2025-03-05 12:23:31.090433,Varejo SP,Administrativo,Hardware,Venda Produto A #693,Receita,1535.370311693133
+2025-05-31 12:23:31.090433,Tecnologia BR,Marketing,Geral,Venda Produto A #101,Receita,5309.156447818607
+2025-04-16 12:23:31.090433,Tecnologia BR,Infraestrutura,Fornecedores,Pagamento Software Y,Despesa,2117.1680312283743
+2024-08-27 12:23:31.090433,Varejo SP,Logística,Serviços,Pagamento Fornecedor X,Despesa,5673.330668313462
+2024-08-09 12:23:31.090433,Tecnologia BR,Infraestrutura,Vendas,Pagamento Fornecedor X,Despesa,7384.960944704753
+2024-08-23 12:23:31.090433,Tecnologia BR,Desenvolvimento,Software,Venda Serviço B #655,Receita,5219.768590017775
+2025-06-07 12:23:31.090433,Varejo SP,Administrativo,Fornecedores,Venda Serviço B #610,Receita,4696.195767495588
+2024-11-29 12:23:31.090433,Tecnologia BR,Desenvolvimento,Fornecedores,Pagamento Software Y,Despesa,7702.077554689654
+2025-04-23 12:23:31.090433,Tecnologia BR,Marketing,Geral,Pagamento Fornecedor X,Despesa,6098.457592313748
+2024-08-05 12:23:31.090433,Varejo SP,Administrativo,Serviços,Pagamento Software Y,Despesa,5729.147206560013
+2025-02-25 12:23:31.090433,Varejo SP,Administrativo,Salários,Pagamento Software Y,Despesa,6859.960111428674
+2024-10-01 12:23:31.090433,Varejo SP,Administrativo,Geral,Venda Produto A #937,Receita,4420.7703208014445
+2024-10-17 12:23:31.090433,Varejo SP,Loja Centro,Geral,Venda Produto A #994,Receita,3699.121898546611
+2024-08-29 12:23:31.090433,Tecnologia BR,Marketing,Geral,Pagamento Software Y,Despesa,6812.625646389217
+2025-01-26 12:23:31.090433,Tecnologia BR,Marketing,Geral,Venda Produto A #753,Receita,6437.904489640288
+2024-12-27 12:23:31.090433,Varejo SP,Logística,Hardware,Pagamento Software Y,Despesa,4700.683079671844
+2025-02-02 12:23:31.090433,Varejo SP,Administrativo,Geral,Pagamento Software Y,Despesa,3099.857073664262
+2025-04-28 12:23:31.090433,Tecnologia BR,Infraestrutura,Serviços,Pagamento Fornecedor X,Despesa,2780.4878089010936
+2024-07-02 12:23:31.090433,Tecnologia BR,Desenvolvimento,Publicidade,Venda Serviço B #992,Receita,6111.626804691452
+2025-01-03 12:23:31.090433,Varejo SP,Loja Centro,Serviços,Pagamento Software Y,Despesa,5056.92816452092
+2024-09-08 12:23:31.090433,Varejo SP,Logística,Serviços,Venda Produto A #118,Receita,8079.633230249677
+2024-07-12 12:23:31.090433,Tecnologia BR,Marketing,Vendas,Venda Produto A #291,Receita,14730.453399843667
+2025-02-10 12:23:31.090433,Tecnologia BR,Marketing,Fornecedores,Pagamento Fornecedor X,Despesa,173.28622064097075
+2025-05-17 12:23:31.090433,Varejo SP,Administrativo,Software,Venda Serviço B #842,Receita,2276.394590982032
+2025-04-18 12:23:31.090433,Varejo SP,Loja Centro,Geral,Pagamento Fornecedor X,Despesa,264.09836379229154
+2024-07-20 12:23:31.090433,Tecnologia BR,Infraestrutura,Vendas,Pagamento Fornecedor X,Despesa,3409.154497221129
+2024-10-17 12:23:31.090433,Varejo SP,Loja Centro,Fornecedores,Venda Produto A #273,Receita,1123.6691393476435
+2025-01-02 12:23:31.090433,Varejo SP,Administrativo,Salários,Venda Produto A #108,Receita,5093.854696133434
+2024-07-19 12:23:31.090433,Varejo SP,Administrativo,Publicidade,Pagamento Fornecedor X,Despesa,7178.178404262536
+2025-03-30 12:23:31.090433,Tecnologia BR,Infraestrutura,Geral,Venda Produto A #266,Receita,1860.7215529813
+2025-04-07 12:23:31.090433,Tecnologia BR,Marketing,Fornecedores,Venda Produto A #927,Receita,7336.274142286333
+2025-04-24 12:23:31.090433,Tecnologia BR,Infraestrutura,Serviços,Pagamento Fornecedor X,Despesa,185.20156245880955
+2025-03-28 12:23:31.090433,Tecnologia BR,Desenvolvimento,Hardware,Pagamento Software Y,Despesa,6915.266180881021
+2024-09-03 12:23:31.090433,Varejo SP,Administrativo,Publicidade,Pagamento Fornecedor X,Despesa,4799.785507860865
+2024-12-02 12:23:31.090433,Varejo SP,Administrativo,Serviços,Venda Produto A #311,Receita,8594.425222323298
+2025-02-25 12:23:31.090433,Tecnologia BR,Infraestrutura,Fornecedores,Pagamento Software Y,Despesa,5303.528657324003
+2025-06-04 12:23:31.090433,Tecnologia BR,Infraestrutura,Hardware,Venda Produto A #407,Receita,7529.504071795272
+2025-02-03 12:23:31.090433,Tecnologia BR,Marketing,Hardware,Pagamento Fornecedor X,Despesa,776.8533033175547
+2024-12-14 12:23:31.090433,Tecnologia BR,Infraestrutura,Hardware,Pagamento Fornecedor X,Despesa,1852.5109161222792
+2024-08-11 12:23:31.090433,Tecnologia BR,Marketing,Vendas,Pagamento Software Y,Despesa,3137.919466581036
+2025-05-23 12:23:31.090433,Varejo SP,Logística,Vendas,Pagamento Fornecedor X,Despesa,4106.29648356245
+2024-06-19 12:23:31.090433,Tecnologia BR,Infraestrutura,Salários,Pagamento Fornecedor X,Despesa,749.1374917201455
+2024-09-06 12:23:31.090433,Tecnologia BR,Marketing,Serviços,Pagamento Fornecedor X,Despesa,3505.911107484094
+2025-06-12 12:23:31.090433,Varejo SP,Logística,Fornecedores,Venda Produto A #458,Receita,9042.122414854666
+2024-08-05 12:23:31.090433,Tecnologia BR,Desenvolvimento,Serviços,Venda Produto A #886,Receita,6159.911004220216
+2025-04-14 12:23:31.090433,Varejo SP,Logística,Hardware,Pagamento Fornecedor X,Despesa,6695.99765432656
+2025-03-16 12:23:31.090433,Varejo SP,Loja Centro,Software,Pagamento Fornecedor X,Despesa,5969.59381772021
+2025-01-16 12:23:31.090433,Tecnologia BR,Desenvolvimento,Hardware,Venda Serviço B #143,Receita,10388.909199579495
+2024-10-27 12:23:31.090433,Tecnologia BR,Desenvolvimento,Geral,Pagamento Software Y,Despesa,6811.073326318285
+2024-07-16 12:23:31.090433,Varejo SP,Administrativo,Salários,Venda Produto A #712,Receita,8335.768312580938
+2025-06-01 12:23:31.090433,Varejo SP,Administrativo,Publicidade,Pagamento Software Y,Despesa,4694.688387183542
+2025-04-12 12:23:31.090433,Tecnologia BR,Infraestrutura,Geral,Venda Serviço B #273,Receita,6066.894761062519
+2025-06-06 12:23:31.090433,Varejo SP,Administrativo,Serviços,Pagamento Fornecedor X,Despesa,4853.048417469874
+2024-12-05 12:23:31.090433,Varejo SP,Administrativo,Hardware,Venda Produto A #391,Receita,8458.196743539049
+2024-10-30 12:23:31.090433,Varejo SP,Logística,Software,Venda Produto A #874,Receita,6591.590739844543
+2024-09-17 12:23:31.090433,Tecnologia BR,Infraestrutura,Publicidade,Venda Produto A #811,Receita,9811.774430916024
+2025-03-19 12:23:31.090433,Tecnologia BR,Infraestrutura,Publicidade,Venda Serviço B #728,Receita,7989.609403548369

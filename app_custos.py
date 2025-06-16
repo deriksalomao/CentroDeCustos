@@ -29,6 +29,7 @@ LANCAMENTOS_FILE = 'lancamentos.csv'
 EMPRESAS_DATA_FILE = 'empresas_data.json'
 CATEGORIAS_FILE = 'categorias.json'
 CONFIG_FILE = 'config.json'
+RECORRENCIAS_FILE = 'recorrencias.json' # NOVO FICHEIRO
 
 class CentroCustoApp:
     def __init__(self, root):
@@ -36,11 +37,14 @@ class CentroCustoApp:
         self.root.title("Sistema de Gestão Financeira Multi-Empresa")
         self.root.geometry("1400x800")
 
+        # Estruturas de dados
         self.colunas = ["Data", "Empresa", "Centro de Custo", "Categoria", "Nome/Descrição", "Tipo", "Valor"]
         self.df_lancamentos = pd.DataFrame(columns=self.colunas)
         self.dados_empresas = {"Empresa Padrão": ["Geral"]}
         self.categorias = ["Geral"]
+        self.recorrencias = [] # NOVA ESTRUTURA DE DADOS
 
+        # Variáveis de UI
         self.total_receitas_var = tk.StringVar(value="R$ 0.00")
         self.total_despesas_var = tk.StringVar(value="R$ 0.00")
         self.saldo_final_var = tk.StringVar(value="R$ 0.00")
@@ -52,6 +56,7 @@ class CentroCustoApp:
         self.carregar_dados()
         self.criar_widgets()
         self.carregar_configuracoes()
+        self._verificar_e_lancar_recorrencias() # NOVA LÓGICA
         self.root.protocol("WM_DELETE_WINDOW", self.ao_fechar)
 
     def setup_styles(self):
@@ -71,6 +76,7 @@ class CentroCustoApp:
         style.configure("Status.TLabel", font=("Segoe UI", 9))
 
     def carregar_dados(self):
+        # Carrega dados de empresas
         if os.path.exists(EMPRESAS_DATA_FILE):
             try:
                 with open(EMPRESAS_DATA_FILE, 'r') as f:
@@ -79,6 +85,7 @@ class CentroCustoApp:
             except (json.JSONDecodeError, FileNotFoundError):
                 self.dados_empresas = {"Empresa Padrão": ["Geral"]}
         
+        # Carrega categorias
         if os.path.exists(CATEGORIAS_FILE):
             try:
                 with open(CATEGORIAS_FILE, 'r') as f: 
@@ -88,6 +95,7 @@ class CentroCustoApp:
             except (json.JSONDecodeError, FileNotFoundError):
                 self.categorias = ["Geral"]
 
+        # Carrega lançamentos
         if os.path.exists(LANCAMENTOS_FILE):
             try:
                 df_temp = pd.read_csv(LANCAMENTOS_FILE)
@@ -97,12 +105,21 @@ class CentroCustoApp:
                 else: self.df_lancamentos = pd.DataFrame(columns=self.colunas)
             except Exception:
                 self.df_lancamentos = pd.DataFrame(columns=self.colunas)
+        
+        # Carrega recorrências
+        if os.path.exists(RECORRENCIAS_FILE):
+            try:
+                with open(RECORRENCIAS_FILE, 'r') as f:
+                    self.recorrencias = json.load(f)
+            except (json.JSONDecodeError, FileNotFoundError):
+                self.recorrencias = []
     
     def salvar_dados(self):
         try:
             self.df_lancamentos.to_csv(LANCAMENTOS_FILE, index=False)
             with open(EMPRESAS_DATA_FILE, 'w') as f: json.dump(self.dados_empresas, f, indent=4)
             with open(CATEGORIAS_FILE, 'w') as f: json.dump(self.categorias, f, indent=4)
+            with open(RECORRENCIAS_FILE, 'w') as f: json.dump(self.recorrencias, f, indent=4) # Salva recorrências
             self.set_status("Dados guardados com sucesso!")
         except Exception as e:
             self.set_status(f"Erro ao guardar dados: {e}")
@@ -154,11 +171,20 @@ class CentroCustoApp:
         self.atualizar_contexto_empresa()
 
     def criar_painel_esquerdo(self, parent):
+        # Frame de ações principais
         frame_acoes_principais = ttk.Frame(parent)
         frame_acoes_principais.pack(fill='x', padx=5, pady=(0, 10))
         frame_acoes_principais.columnconfigure(0, weight=1)
+        frame_acoes_principais.columnconfigure(1, weight=1)
+        
         btn_abrir_graficos = ttk.Button(frame_acoes_principais, text="Análise Gráfica", command=self.abrir_janela_graficos, style="Info.TButton")
-        btn_abrir_graficos.grid(row=0, column=0, columnspan=2, sticky='ew')
+        btn_abrir_graficos.grid(row=0, column=0, sticky='ew', padx=(0, 2))
+        
+        # NOVO BOTÃO DE RECORRÊNCIAS
+        btn_abrir_recorrencias = ttk.Button(frame_acoes_principais, text="Gerir Recorrências", command=self.abrir_janela_recorrencias)
+        btn_abrir_recorrencias.grid(row=0, column=1, sticky='ew', padx=(2, 0))
+
+        # Frame de Gestão de Empresas
         frame_empresas = ttk.LabelFrame(parent, text="Gestão de Empresas", padding=(10, 5))
         frame_empresas.pack(fill="x", padx=5, pady=5, side=tk.TOP)
         frame_empresas.columnconfigure(1, weight=1)
@@ -174,6 +200,8 @@ class CentroCustoApp:
         self.entry_nova_empresa.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         btn_add_empresa = ttk.Button(frame_empresas, text="Adicionar", command=self.adicionar_empresa, width=8)
         btn_add_empresa.grid(row=1, column=2, padx=5, pady=5)
+        
+        # Outros frames
         frame_categorias = ttk.LabelFrame(parent, text="Gestão de Categorias", padding=(10, 5))
         frame_categorias.pack(fill="x", padx=5, pady=5, side=tk.TOP)
         frame_categorias.columnconfigure(1, weight=1)
@@ -187,6 +215,7 @@ class CentroCustoApp:
         self.entry_nova_categoria.grid(row=1, column=1, sticky="ew", padx=5)
         btn_add_categoria = ttk.Button(frame_categorias, text="Adicionar", command=self.adicionar_categoria, width=8)
         btn_add_categoria.grid(row=1, column=2, padx=5)
+        
         frame_add_cc = ttk.LabelFrame(parent, text="Gestão de Centros de Custo", padding=(10, 5))
         frame_add_cc.pack(fill="x", padx=5, pady=5, side=tk.TOP)
         frame_add_cc.columnconfigure(1, weight=1)
@@ -195,12 +224,15 @@ class CentroCustoApp:
         self.entry_novo_cc.grid(row=0, column=1, sticky="ew", padx=5)
         btn_add_cc = ttk.Button(frame_add_cc, text="Adicionar", command=self.adicionar_centro_custo, width=8)
         btn_add_cc.grid(row=0, column=2, padx=5)
+        
         btn_abrir_popup_lancamento = ttk.Button(parent, text="Adicionar Novo Lançamento", command=self.abrir_janela_novo_lancamento, style="Success.TButton")
         btn_abrir_popup_lancamento.pack(fill='x', padx=5, pady=20, ipady=10, side=tk.TOP)
+        
         frame_acoes_globais = ttk.Frame(parent)
         frame_acoes_globais.pack(fill='x', padx=5, pady=(10, 5), side=tk.BOTTOM)
         btn_salvar = ttk.Button(frame_acoes_globais, text="Salvar Alterações", command=self.salvar_dados)
         btn_salvar.pack(fill='x')
+        
         frame_resumo = ttk.LabelFrame(parent, text="Resumo Financeiro (Filtro Aplicado)", padding=(10, 10))
         frame_resumo.pack(fill="x", padx=5, pady=5, side=tk.BOTTOM)
         ttk.Label(frame_resumo, text="Total de Receitas:", font=("Segoe UI", 10, "bold")).grid(row=0, column=0, sticky="w", padx=5)
@@ -213,10 +245,12 @@ class CentroCustoApp:
         ttk.Label(frame_resumo, text="Margem de Lucro:", font=("Segoe UI", 12, "bold")).grid(row=3, column=0, sticky="w", padx=5, pady=(5,0))
         self.label_margem = ttk.Label(frame_resumo, textvariable=self.margem_lucro_var)
         self.label_margem.grid(row=3, column=1, sticky="w", padx=5, pady=(5,0))
+        
         frame_ferramentas = ttk.LabelFrame(parent, text="Ferramentas de Teste", padding=(10, 5))
         frame_ferramentas.pack(fill="x", padx=5, pady=15, side=tk.BOTTOM)
         btn_gerar_dados = ttk.Button(frame_ferramentas, text="Gerar Dados de Teste", command=self.gerar_dados_teste)
         btn_gerar_dados.pack(fill='x')
+        
         self.atualizar_combobox_categorias()
         
     def criar_painel_direito(self, parent):
@@ -507,7 +541,6 @@ class CentroCustoApp:
         btn_salvar = ttk.Button(frame, text="Salvar Alterações", command=salvar_edicao)
         btn_salvar.grid(row=5, column=0, columnspan=2, pady=10)
 
-    # --- FUNÇÃO RESTAURADA ---
     def exportar_para_excel(self):
         df_filtrado = self._get_filtered_data()
         if df_filtrado.empty:
@@ -708,6 +741,188 @@ class CentroCustoApp:
         self.atualizar_combobox_categorias()
         self.salvar_dados()
         self.set_status("Dados de teste gerados e guardados com sucesso!")
+
+    # --- NOVAS FUNÇÕES PARA RECORRÊNCIAS ---
+    
+    def abrir_janela_recorrencias(self):
+        # Cria a janela de gestão
+        win = tk.Toplevel(self.root)
+        win.title("Gestão de Lançamentos Recorrentes")
+        win.geometry("800x500")
+        win.transient(self.root)
+        win.grab_set()
+
+        frame = ttk.Frame(win, padding=10)
+        frame.pack(fill='both', expand=True)
+
+        # Treeview para listar as recorrências
+        colunas = ('descricao', 'valor', 'tipo', 'empresa', 'categoria', 'dia', 'ultimo_lancamento')
+        tree = ttk.Treeview(frame, columns=colunas, show='headings')
+        tree.pack(side='left', fill='both', expand=True)
+
+        # Configura os cabeçalhos
+        tree.heading('descricao', text='Descrição'); tree.column('descricao', width=200)
+        tree.heading('valor', text='Valor'); tree.column('valor', width=80, anchor='e')
+        tree.heading('tipo', text='Tipo'); tree.column('tipo', width=80, anchor='center')
+        tree.heading('empresa', text='Empresa'); tree.column('empresa', width=120)
+        tree.heading('categoria', text='Categoria'); tree.column('categoria', width=100)
+        tree.heading('dia', text='Dia do Mês'); tree.column('dia', width=80, anchor='center')
+        tree.heading('ultimo_lancamento', text='Último Lançamento'); tree.column('ultimo_lancamento', width=120, anchor='center')
+
+        scrollbar = ttk.Scrollbar(frame, orient='vertical', command=tree.yview)
+        scrollbar.pack(side='right', fill='y')
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        # Frame de botões
+        botoes_frame = ttk.Frame(win, padding=10)
+        botoes_frame.pack(fill='x')
+
+        def popular_tree():
+            for i in tree.get_children(): tree.delete(i)
+            for idx, rec in enumerate(self.recorrencias):
+                tree.insert('', 'end', iid=idx, values=(
+                    rec.get('descricao', ''),
+                    f"R$ {rec.get('valor', 0):.2f}",
+                    rec.get('tipo', ''),
+                    rec.get('empresa', ''),
+                    rec.get('categoria', ''),
+                    rec.get('dia_mes', ''),
+                    rec.get('ultimo_lancamento', 'Nunca')
+                ))
+
+        def adicionar():
+            self._popup_gerir_recorrencia(callback=popular_tree)
+        
+        def editar():
+            selecionado = tree.focus()
+            if not selecionado: return
+            idx = int(selecionado)
+            self._popup_gerir_recorrencia(self.recorrencias[idx], idx, callback=popular_tree)
+
+        def excluir():
+            selecionado = tree.focus()
+            if not selecionado: return
+            if messagebox.askyesno("Confirmar", "Tem a certeza que deseja excluir esta recorrência?"):
+                idx = int(selecionado)
+                del self.recorrencias[idx]
+                popular_tree()
+                self.set_status("Recorrência excluída.")
+
+        ttk.Button(botoes_frame, text="Adicionar Nova", command=adicionar).pack(side='left', padx=5)
+        ttk.Button(botoes_frame, text="Editar Selecionada", command=editar).pack(side='left', padx=5)
+        ttk.Button(botoes_frame, text="Excluir Selecionada", command=excluir, style="Danger.TButton").pack(side='right', padx=5)
+
+        popular_tree()
+
+    def _popup_gerir_recorrencia(self, dados=None, idx=None, callback=None):
+        win = tk.Toplevel(self.root)
+        win.title("Adicionar/Editar Recorrência")
+        win.geometry("450x350")
+        win.transient(self.root); win.grab_set()
+
+        frame = ttk.Frame(win, padding=15); frame.pack(fill='both', expand=True); frame.columnconfigure(1, weight=1)
+        
+        campos = {}
+        
+        # Linha 0: Descrição
+        ttk.Label(frame, text="Descrição:").grid(row=0, column=0, sticky='w', pady=5)
+        campos['descricao'] = ttk.Entry(frame); campos['descricao'].grid(row=0, column=1, sticky='ew', pady=5)
+        
+        # Linha 1: Valor
+        ttk.Label(frame, text="Valor (R$):").grid(row=1, column=0, sticky='w', pady=5)
+        campos['valor'] = ttk.Entry(frame); campos['valor'].grid(row=1, column=1, sticky='ew', pady=5)
+
+        # Linha 2: Tipo
+        ttk.Label(frame, text="Tipo:").grid(row=2, column=0, sticky='w', pady=5)
+        campos['tipo'] = ttk.Combobox(frame, values=["Receita", "Despesa"], state='readonly'); campos['tipo'].grid(row=2, column=1, sticky='ew', pady=5)
+
+        # Linha 3: Empresa
+        ttk.Label(frame, text="Empresa:").grid(row=3, column=0, sticky='w', pady=5)
+        campos['empresa'] = ttk.Combobox(frame, values=list(self.dados_empresas.keys()), state='readonly'); campos['empresa'].grid(row=3, column=1, sticky='ew', pady=5)
+        
+        # Linha 4: Categoria
+        ttk.Label(frame, text="Categoria:").grid(row=4, column=0, sticky='w', pady=5)
+        campos['categoria'] = ttk.Combobox(frame, values=self.categorias, state='readonly'); campos['categoria'].grid(row=4, column=1, sticky='ew', pady=5)
+        
+        # Linha 5: Dia do Mês
+        ttk.Label(frame, text="Dia do Mês para Lançar:").grid(row=5, column=0, sticky='w', pady=5)
+        campos['dia_mes'] = ttk.Spinbox(frame, from_=1, to=31); campos['dia_mes'].grid(row=5, column=1, sticky='ew', pady=5)
+        
+        if dados: # Modo Edição
+            campos['descricao'].insert(0, dados.get('descricao', ''))
+            campos['valor'].insert(0, dados.get('valor', ''))
+            campos['tipo'].set(dados.get('tipo', 'Despesa'))
+            campos['empresa'].set(dados.get('empresa', ''))
+            campos['categoria'].set(dados.get('categoria', ''))
+            campos['dia_mes'].set(dados.get('dia_mes', 1))
+
+        def salvar():
+            try:
+                nova_recorrencia = {
+                    'descricao': campos['descricao'].get(),
+                    'valor': float(campos['valor'].get()),
+                    'tipo': campos['tipo'].get(),
+                    'empresa': campos['empresa'].get(),
+                    'categoria': campos['categoria'].get(),
+                    'dia_mes': int(campos['dia_mes'].get()),
+                    'ultimo_lancamento': dados.get('ultimo_lancamento', 'Nunca') if dados else 'Nunca'
+                }
+                if not all([nova_recorrencia['descricao'], nova_recorrencia['tipo'], nova_recorrencia['empresa'], nova_recorrencia['categoria']]):
+                    raise ValueError("Todos os campos devem ser preenchidos.")
+            except Exception as e:
+                messagebox.showerror("Erro de Validação", str(e), parent=win)
+                return
+
+            if idx is not None: # Editando
+                self.recorrencias[idx] = nova_recorrencia
+                self.set_status("Recorrência atualizada.")
+            else: # Adicionando
+                self.recorrencias.append(nova_recorrencia)
+                self.set_status("Recorrência adicionada.")
+            
+            if callback: callback()
+            win.destroy()
+
+        ttk.Button(frame, text="Salvar", command=salvar).grid(row=6, column=0, columnspan=2, pady=20)
+
+    def _verificar_e_lancar_recorrencias(self):
+        hoje = datetime.now()
+        mudancas_feitas = False
+        for rec in self.recorrencias:
+            # Converte a string 'ultimo_lancamento' para data, se não for 'Nunca'
+            ultimo_lancamento_data = None
+            if rec['ultimo_lancamento'] != 'Nunca':
+                try:
+                    ultimo_lancamento_data = datetime.strptime(rec['ultimo_lancamento'], '%Y-%m-%d')
+                except ValueError:
+                    continue # Ignora formato de data inválido
+
+            # Verifica se precisa lançar
+            precisa_lancar = False
+            if ultimo_lancamento_data is None: # Nunca foi lançado
+                precisa_lancar = True
+            # Se já foi lançado, verifica se o mês/ano são diferentes
+            elif (ultimo_lancamento_data.year, ultimo_lancamento_data.month) != (hoje.year, hoje.month):
+                 precisa_lancar = True
+
+            if precisa_lancar and hoje.day >= rec['dia_mes']:
+                # Cria o novo lançamento
+                data_lancamento = hoje.replace(day=rec['dia_mes'])
+                novo_lancamento = pd.DataFrame([[
+                    data_lancamento, rec['empresa'], 'Geral', rec['categoria'], 
+                    rec['descricao'], rec['tipo'], rec['valor']
+                ]], columns=self.colunas)
+                
+                # Adiciona ao DataFrame principal
+                self.df_lancamentos = pd.concat([self.df_lancamentos, novo_lancamento], ignore_index=True)
+                
+                # Atualiza a data do último lançamento na regra de recorrência
+                rec['ultimo_lancamento'] = hoje.strftime('%Y-%m-%d')
+                mudancas_feitas = True
+        
+        if mudancas_feitas:
+            self.atualizar_relatorio()
+            self.set_status(f"Lançamentos recorrentes foram criados/atualizados.")
 
 if __name__ == "__main__":
     root = tk.Tk()
