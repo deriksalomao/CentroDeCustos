@@ -41,9 +41,9 @@ Data,Empresa,Centro de Custo,Categoria,Nome/Descrição,Tipo,Valor
 2025-06-03 12:23:31.090433,Tecnologia BR,Infraestrutura,Software,Venda Produto A #579,Receita,12066.388836223236
 2024-08-30 12:23:31.090433,Varejo SP,Administrativo,Geral,Venda Produto A #185,Receita,14601.537035030638
 2025-01-13 12:23:31.090433,Tecnologia BR,Desenvolvimento,Fornecedores,Pagamento Fornecedor X,Despesa,1369.9355927431664
-2025-03-10 12:23:31.090433,Varejo SP,Administrativo,Vendas,Pagamento Fornecedor X,Despesa,2835.3298234473277
+2025-03-10 12:23:31.090433,Varejo SP,Administrativo,Vendas,Pagamento Fornecedor X,Despesa,2835.329823447328
 2025-04-01 12:23:31.090433,Tecnologia BR,Marketing,Hardware,Venda Serviço B #286,Receita,4895.032630628943
-2024-10-15 12:23:31.090433,Varejo SP,Loja Centro,Salários,Pagamento Fornecedor X,Despesa,1922.1443567513636
+2024-10-15 12:23:31.090433,Varejo SP,Loja Centro,Salários,Pagamento Fornecedor X,Despesa,1922.144356751364
 2025-06-13 12:23:31.090433,Tecnologia BR,Infraestrutura,Fornecedores,Venda Serviço B #522,Receita,8030.309099532754
 2024-12-28 12:23:31.090433,Varejo SP,Loja Centro,Publicidade,Pagamento Software Y,Despesa,7910.296835688355
 2025-05-28 12:23:31.090433,Varejo SP,Logística,Salários,Pagamento Software Y,Despesa,2678.13712854504
@@ -83,7 +83,7 @@ Data,Empresa,Centro de Custo,Categoria,Nome/Descrição,Tipo,Valor
 2025-01-25 12:23:31.090433,Varejo SP,Administrativo,Hardware,Pagamento Software Y,Despesa,2441.78849446526
 2024-12-03 12:23:31.090433,Varejo SP,Loja Centro,Hardware,Pagamento Software Y,Despesa,4336.436846827389
 2025-02-17 12:23:31.090433,Varejo SP,Administrativo,Salários,Venda Serviço B #572,Receita,11330.40489941364
-2024-09-30 12:23:31.090433,Varejo SP,Loja Centro,Salários,Pagamento Fornecedor X,Despesa,2259.2868750506877
+2024-09-30 12:23:31.090433,Varejo SP,Loja Centro,Salários,Pagamento Fornecedor X,Despesa,2259.286875050688
 2024-11-13 12:23:31.090433,Varejo SP,Loja Centro,Publicidade,Venda Serviço B #794,Receita,12270.305132636238
 2025-02-08 12:23:31.090433,Tecnologia BR,Desenvolvimento,Vendas,Pagamento Software Y,Despesa,1172.1952912199326
 2024-12-12 12:23:31.090433,Tecnologia BR,Desenvolvimento,Salários,Pagamento Fornecedor X,Despesa,595.8000215569505
