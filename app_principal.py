@@ -161,8 +161,6 @@ class AppPrincipal:
         
         ttk.Label(tab_dashboard, text="Em breve: um Dashboard com os principais indicadores!", font=("Segoe UI", 14)).pack(padx=20, pady=20)
         
-    # --- Métodos de Lógica da Aplicação ---
-    
     def atualizar_contexto_empresa(self, event=None):
         empresa_ativa = self.combo_empresa_ativa.get()
         if empresa_ativa:
@@ -232,7 +230,7 @@ class AppPrincipal:
         self.combo_excluir_categoria.set(cats[0] if cats else '')
 
     def _adicionar_lancamento_logica(self, empresa, cc, categoria, descricao, tipo, valor):
-        novo_lanc = pd.DataFrame([[datetime.now(), empresa, cc, categoria, descricao, tipo, valor]], columns=self.colunas)
+        novo_lanc = pd.DataFrame([[datetime.now(), empresa, cc, categoria, descricao, tipo, valor]], columns=self.data_manager.colunas)
         self.data_manager.df_lancamentos = pd.concat([self.data_manager.df_lancamentos, novo_lanc], ignore_index=True)
         self.atualizar_relatorio()
         self.set_status("Lançamento adicionado com sucesso.")
@@ -388,235 +386,22 @@ class AppPrincipal:
         
         ttk.Button(frame, text="Salvar Alterações", command=salvar_edicao).grid(row=5, column=0, columnspan=2, pady=10)
 
-    # --- Métodos de Recorrências ---
-    
-    def abrir_janela_recorrencias(self):
-        # A lógica agora estaria em ui_recorrencias.py, mas como unificamos,
-        # chamamos um método daqui mesmo.
-        self._popup_gerir_recorrencias_main()
-
-    def _popup_gerir_recorrencias_main(self):
-        win = tk.Toplevel(self.root); win.title("Gestão de Lançamentos Recorrentes"); win.geometry("800x500")
-        win.transient(self.root); win.grab_set()
-        frame = ttk.Frame(win, padding=10); frame.pack(fill='both', expand=True)
-        
-        colunas = ('descricao', 'valor', 'tipo', 'empresa', 'categoria', 'dia', 'ultimo_lancamento')
-        tree = ttk.Treeview(frame, columns=colunas, show='headings'); tree.pack(side='left', fill='both', expand=True)
-        for col, name, width, anchor in [('descricao', 'Descrição', 200, 'w'), ('valor', 'Valor', 80, 'e'), ('tipo', 'Tipo', 80, 'center'), ('empresa', 'Empresa', 120, 'w'), ('categoria', 'Categoria', 100, 'w'), ('dia', 'Dia do Mês', 80, 'center'), ('ultimo_lancamento', 'Último Lançamento', 120, 'center')]:
-            tree.heading(col, text=name); tree.column(col, width=width, anchor=anchor)
-        
-        scrollbar = ttk.Scrollbar(frame, orient='vertical', command=tree.yview); scrollbar.pack(side='right', fill='y'); tree.configure(yscrollcommand=scrollbar.set)
-        botoes_frame = ttk.Frame(win, padding=10); botoes_frame.pack(fill='x')
-
-        def popular_tree():
-            for i in tree.get_children(): tree.delete(i)
-            for idx, rec in enumerate(self.recorrencias):
-                tree.insert('', 'end', iid=idx, values=(rec.get('descricao', ''), f"R$ {rec.get('valor', 0):.2f}", rec.get('tipo', ''), rec.get('empresa', ''), rec.get('categoria', ''), rec.get('dia_mes', ''), rec.get('ultimo_lancamento', 'Nunca')))
-
-        def adicionar(): self._popup_editar_recorrencia(callback=popular_tree)
-        def editar():
-            if not tree.focus(): return
-            self._popup_editar_recorrencia(self.recorrencias[int(tree.focus())], int(tree.focus()), callback=popular_tree)
-        def excluir():
-            if not tree.focus(): return
-            if messagebox.askyesno("Confirmar", "Tem a certeza que deseja excluir esta recorrência?"):
-                del self.recorrencias[int(tree.focus())]; popular_tree(); self.set_status("Recorrência excluída.")
-
-        ttk.Button(botoes_frame, text="Adicionar", command=adicionar).pack(side='left', padx=5)
-        ttk.Button(botoes_frame, text="Editar", command=editar).pack(side='left', padx=5)
-        ttk.Button(botoes_frame, text="Excluir", command=excluir, style="Danger.TButton").pack(side='right', padx=5)
-        popular_tree()
-
-    def _popup_editar_recorrencia(self, dados=None, idx=None, callback=None):
-        win = tk.Toplevel(self.root); win.title("Adicionar/Editar Recorrência"); win.geometry("450x350")
-        win.transient(self.root); win.grab_set()
-        frame = ttk.Frame(win, padding=15); frame.pack(fill='both', expand=True); frame.columnconfigure(1, weight=1)
-        campos = {}
-        
-        ttk.Label(frame, text="Descrição:").grid(row=0, column=0, sticky='w', pady=5); campos['descricao'] = ttk.Entry(frame); campos['descricao'].grid(row=0, column=1, sticky='ew', pady=5)
-        ttk.Label(frame, text="Valor (R$):").grid(row=1, column=0, sticky='w', pady=5); campos['valor'] = ttk.Entry(frame); campos['valor'].grid(row=1, column=1, sticky='ew', pady=5)
-        ttk.Label(frame, text="Tipo:").grid(row=2, column=0, sticky='w', pady=5); campos['tipo'] = ttk.Combobox(frame, values=["Receita", "Despesa"], state='readonly'); campos['tipo'].grid(row=2, column=1, sticky='ew', pady=5)
-        ttk.Label(frame, text="Empresa:").grid(row=3, column=0, sticky='w', pady=5); campos['empresa'] = ttk.Combobox(frame, values=list(self.dados_empresas.keys()), state='readonly'); campos['empresa'].grid(row=3, column=1, sticky='ew', pady=5)
-        ttk.Label(frame, text="Categoria:").grid(row=4, column=0, sticky='w', pady=5); campos['categoria'] = ttk.Combobox(frame, values=self.categorias, state='readonly'); campos['categoria'].grid(row=4, column=1, sticky='ew', pady=5)
-        ttk.Label(frame, text="Dia do Mês para Lançar:").grid(row=5, column=0, sticky='w', pady=5); campos['dia_mes'] = ttk.Spinbox(frame, from_=1, to=31); campos['dia_mes'].grid(row=5, column=1, sticky='ew', pady=5)
-        
-        if dados:
-            campos['descricao'].insert(0, dados.get('descricao', '')); campos['valor'].insert(0, dados.get('valor', ''))
-            campos['tipo'].set(dados.get('tipo', 'Despesa')); campos['empresa'].set(dados.get('empresa', ''))
-            campos['categoria'].set(dados.get('categoria', '')); campos['dia_mes'].set(dados.get('dia_mes', 1))
-
-        def salvar():
-            try:
-                rec = {'descricao': campos['descricao'].get(), 'valor': float(campos['valor'].get()), 'tipo': campos['tipo'].get(), 'empresa': campos['empresa'].get(), 'categoria': campos['categoria'].get(), 'dia_mes': int(campos['dia_mes'].get()), 'ultimo_lancamento': dados.get('ultimo_lancamento', 'Nunca') if dados else 'Nunca'}
-                if not all(rec.values()): raise ValueError("Preencha todos os campos.")
-            except Exception as e: messagebox.showerror("Erro de Validação", str(e), parent=win); return
-
-            if idx is not None: self.recorrencias[idx] = rec; self.set_status("Recorrência atualizada.")
-            else: self.recorrencias.append(rec); self.set_status("Recorrência adicionada.")
-            if callback: callback()
-            win.destroy()
-        
-        ttk.Button(frame, text="Salvar", command=salvar).grid(row=6, column=0, columnspan=2, pady=20)
-
-    def _verificar_e_lancar_recorrencias(self):
-        hoje = datetime.now(); mudancas = False
-        for rec in self.recorrencias:
-            ultimo = None
-            if rec['ultimo_lancamento'] != 'Nunca':
-                try: ultimo = datetime.strptime(rec['ultimo_lancamento'], '%Y-%m-%d')
-                except ValueError: continue
-            
-            lancar = (ultimo is None or (ultimo.year, ultimo.month) != (hoje.year, hoje.month)) and hoje.day >= rec['dia_mes']
-            if lancar:
-                novo_lanc = pd.DataFrame([[hoje.replace(day=rec['dia_mes']), rec['empresa'], 'Geral', rec['categoria'], rec['descricao'], rec['tipo'], rec['valor']]], columns=self.colunas)
-                self.df_lancamentos = pd.concat([self.df_lancamentos, novo_lanc], ignore_index=True)
-                rec['ultimo_lancamento'] = hoje.strftime('%Y-%m-%d'); mudancas = True
-        
-        if mudancas: self.atualizar_relatorio(); self.set_status(f"Lançamentos recorrentes foram criados.")
-
-    # --- Métodos de Gráficos e PDF ---
-    
-    def abrir_janela_graficos(self):
-        if not MATPLOTLIB_DISPONIVEL: messagebox.showerror("Biblioteca em Falta", "Instale 'matplotlib' para usar a análise gráfica."); return
-        df = self.get_filtered_data()
-        if df.empty: messagebox.showinfo("Sem Dados", "Não há dados para gerar gráficos com os filtros atuais."); return
-        
-        plt.style.use('seaborn-v0_8-darkgrid')
-        win = tk.Toplevel(self.root); win.title(f"Análise Gráfica - {self.combo_empresa_ativa.get()}"); win.geometry("1000x750")
-        win.transient(self.root); win.grab_set()
-        
-        main_frame = ttk.Frame(win); main_frame.pack(fill='both', expand=True, padx=10, pady=10)
-        notebook = ttk.Notebook(main_frame); notebook.pack(fill='both', expand=True)
-        botoes_frame = ttk.Frame(main_frame); botoes_frame.pack(fill='x', pady=(10, 0))
-        ttk.Button(botoes_frame, text="Gerar Relatório PDF", command=lambda: self.gerar_relatorio_pdf(df)).pack()
-        
-        tab1 = ttk.Frame(notebook); notebook.add(tab1, text='Despesas por Grupo')
-        self._criar_grafico_pizza_ui(tab1, df)
-        tab2 = ttk.Frame(notebook); notebook.add(tab2, text='Receita vs. Despesa Mensal')
-        self._criar_grafico_barras_ui(tab2, df)
-        tab3 = ttk.Frame(notebook); notebook.add(tab3, text='Evolução do Saldo')
-        self._criar_grafico_linha_ui(tab3, df)
-
-    def _criar_grafico_pizza_ui(self, parent, df):
-        frame_ctrl = ttk.Frame(parent); frame_ctrl.pack(fill='x', pady=5)
-        ttk.Label(frame_ctrl, text="Agrupar por:").pack(side='left', padx=5)
-        combo = ttk.Combobox(frame_ctrl, values=["Categoria", "Centro de Custo"], state='readonly'); combo.pack(side='left', padx=5); combo.set("Categoria")
-        canvas_frame = ttk.Frame(parent); canvas_frame.pack(fill='both', expand=True)
-        
-        def atualizar():
-            for w in canvas_frame.winfo_children(): w.destroy()
-            grupo = combo.get()
-            dados = df[df['Tipo'] == 'Despesa'].groupby(grupo)['Valor'].sum()
-            if dados.empty: ttk.Label(canvas_frame, text="Não há despesas para exibir.").pack(pady=20); return
-            fig = self._plotar_grafico_pizza_fig(dados, grupo)
-            canvas = FigureCanvasTkAgg(fig, master=canvas_frame); canvas.draw(); canvas.get_tk_widget().pack(fill='both', expand=True)
-        
-        combo.bind("<<ComboboxSelected>>", lambda e: atualizar()); atualizar()
-
-    def _criar_grafico_barras_ui(self, parent, df):
-        fig = self._plotar_grafico_barras_fig(df)
-        canvas = FigureCanvasTkAgg(fig, master=parent); canvas.draw(); canvas.get_tk_widget().pack(fill='both', expand=True)
-
-    def _criar_grafico_linha_ui(self, parent, df):
-        fig = self._plotar_grafico_linha_fig(df)
-        canvas = FigureCanvasTkAgg(fig, master=parent); canvas.draw(); canvas.get_tk_widget().pack(fill='both', expand=True)
-
-    def _plotar_grafico_pizza_fig(self, df_despesas, grupo):
-        fig, ax = plt.subplots(figsize=(8, 6), subplot_kw=dict(aspect="equal"))
-        explode = pd.Series(0.0, index=df_despesas.index)
-        if not df_despesas.empty: explode[df_despesas.idxmax()] = 0.1
-        colors = plt.cm.viridis(df_despesas.values / max(df_despesas.values.max(), 1))
-        wedges, texts, autotexts = ax.pie(df_despesas, labels=df_despesas.index, autopct='%1.1f%%', startangle=140, pctdistance=0.85, explode=explode, colors=colors, shadow=True)
-        plt.setp(autotexts, size=10, weight="bold", color="white"); plt.setp(texts, size=9)
-        ax.set_title(f"Distribuição de Despesas por {grupo}", fontsize=14, fontweight='bold', pad=20)
-        ax.add_artist(plt.Circle((0,0), 0.70, fc='white')); return fig
-
-    def _plotar_grafico_barras_fig(self, df):
-        df_plot = df.copy()
-        df_plot['Mês'] = pd.to_datetime(df_plot['Data']).dt.to_period('M')
-        dados = df_plot.groupby(['Mês', 'Tipo'])['Valor'].sum().unstack(fill_value=0).astype(float); dados.index = dados.index.strftime('%Y-%m')
-        fig, ax = plt.subplots(figsize=(10, 6))
-        color_map = {'Despesa': '#E74C3C', 'Receita': '#2ECC71'}
-        col_ord = [col for col in ['Despesa', 'Receita'] if col in dados.columns]
-        if col_ord:
-            dados[col_ord].plot(kind='bar', ax=ax, color=[color_map[col] for col in col_ord])
-            for container in ax.containers: ax.bar_label(container, fmt='R$ {:,.0f}', size=8, padding=3, rotation=90)
-        ax.set_title("Receitas vs. Despesas Mensais", fontsize=14, fontweight='bold', pad=20)
-        ax.set_xlabel("Mês", fontsize=10); ax.set_ylabel("Valor (R$)", fontsize=10)
-        ax.tick_params(axis='x', rotation=45, labelsize=9); ax.legend(title='Tipo', fontsize=9)
-        fig.tight_layout(); return fig
-
-    def _plotar_grafico_linha_fig(self, df):
-        df_plot = df.copy().sort_values(by="Data")
-        fig, ax = plt.subplots(figsize=(10, 6))
-        if not df_plot.empty:
-            df_plot['Movimento'] = df_plot.apply(lambda row: row['Valor'] if row['Tipo'] == 'Receita' else -row['Valor'], axis=1)
-            df_plot['Saldo Acumulado'] = df_plot['Movimento'].cumsum()
-            y, x = df_plot['Saldo Acumulado'].values, df_plot['Data'].values
-            ax.plot(x, y, color='#3498DB', marker='o', linestyle='-', markersize=5)
-            ax.fill_between(x, y, where=y > 0, color='#2ECC71', alpha=0.3, interpolate=True)
-            ax.fill_between(x, y, where=y <= 0, color='#E74C3C', alpha=0.3, interpolate=True)
-            ax.axhline(0, color='black', linewidth=0.8, linestyle='--')
-        ax.set_title("Evolução do Saldo Acumulado", fontsize=14, fontweight='bold', pad=20)
-        ax.set_xlabel("Data", fontsize=10); ax.set_ylabel("Saldo (R$)", fontsize=10)
-        fig.tight_layout(); return fig
-
-    def gerar_relatorio_pdf(self, df_filtrado):
-        if not REPORTLAB_DISPONIVEL: messagebox.showerror("Biblioteca em Falta", "Instale 'reportlab' para gerar PDFs."); return
-        path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("Ficheiros PDF", "*.pdf")], title="Salvar Relatório PDF", initialfile=f"Relatorio_{self.combo_empresa_ativa.get().replace(' ', '_')}_{datetime.now():%Y-%m-%d}.pdf")
-        if not path: return
-        try:
-            doc = SimpleDocTemplate(path, rightMargin=inch/2, leftMargin=inch/2, topMargin=inch/2, bottomMargin=inch/2)
-            styles = getSampleStyleSheet()
-            story = [Paragraph(f"Relatório de Análise Gráfica", styles['h1']), Paragraph(f"Empresa: {self.combo_empresa_ativa.get()}", styles['h2']), Paragraph(f"Período: {self.date_inicio.get_date():%d/%m/%Y} a {self.date_fim.get_date():%d/%m/%Y}", styles['Normal']), Spacer(1, 0.4*inch)]
-            
-            def save_fig(fig):
-                buf = io.BytesIO(); fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
-                plt.close(fig); buf.seek(0)
-                return Image(buf, width=7*inch, height=4.5*inch, kind='proportional')
-
-            dados_pizza = df_filtrado[df_filtrado['Tipo'] == 'Despesa'].groupby('Categoria')['Valor'].sum()
-            if not dados_pizza.empty: story.extend([Paragraph("Distribuição de Despesas por Categoria", styles['h3']), save_fig(self._plotar_grafico_pizza_fig(dados_pizza, 'Categoria')), Spacer(1, 0.2*inch)])
-            if not df_filtrado.empty:
-                story.extend([Paragraph("Receitas vs. Despesas Mensais", styles['h3']), save_fig(self._plotar_grafico_barras_fig(df_filtrado)), Spacer(1, 0.2*inch)])
-                story.extend([Paragraph("Evolução do Saldo Acumulado", styles['h3']), save_fig(self._plotar_grafico_linha_fig(df_filtrado))])
-
-            doc.build(story)
-            messagebox.showinfo("Sucesso", f"Relatório exportado para:\n{path}")
-        except Exception as e:
-            messagebox.showerror("Erro de Exportação", f"Não foi possível gerar o PDF.\nErro: {e}")
-
     def gerar_dados_teste(self):
         if not messagebox.askyesno("Confirmar", "Isto irá apagar todos os dados atuais e gerar um novo conjunto de dados de teste. Deseja continuar?"): return
-        self.df_lancamentos = pd.DataFrame(columns=self.colunas)
-        self.dados_empresas = {"Tecnologia BR": ["Desenvolvimento", "Marketing", "Infraestrutura"], "Varejo SP": ["Loja Centro", "Logística", "Administrativo"]}
-        self.categorias = ["Software", "Hardware", "Publicidade", "Salários", "Fornecedores", "Vendas", "Serviços", "Geral"]
+        self.data_manager.df_lancamentos = pd.DataFrame(columns=self.colunas)
+        self.data_manager.dados_empresas = {"Tecnologia BR": ["Desenvolvimento", "Marketing", "Infraestrutura"], "Varejo SP": ["Loja Centro", "Logística", "Administrativo"]}
+        self.data_manager.categorias = ["Software", "Hardware", "Publicidade", "Salários", "Fornecedores", "Vendas", "Serviços", "Geral"]
         lancamentos = []
         hoje = datetime.now(); data_antiga = hoje - timedelta(days=365)
         for _ in range(150):
-            empresa = random.choice(list(self.dados_empresas.keys())); cc = random.choice(self.dados_empresas[empresa]); cat = random.choice(self.categorias)
+            empresa = random.choice(list(self.data_manager.dados_empresas.keys())); cc = random.choice(self.data_manager.dados_empresas[empresa]); cat = random.choice(self.data_manager.categorias)
             tipo = random.choices(["Receita", "Despesa"], weights=[0.4, 0.6], k=1)[0]
             data = hoje - timedelta(days=random.randint(0, 365))
             desc = f"Venda {random.choice(['Prod A', 'Serv B'])} #{random.randint(100,999)}" if tipo == "Receita" else f"Pagamento {random.choice(['Forn X', 'Soft Y'])}"
             valor = random.uniform(500, 15000) if tipo == "Receita" else random.uniform(100, 8000)
             lancamentos.append([data, empresa, cc, cat, desc, tipo, valor])
-        self.df_lancamentos = pd.DataFrame(lancamentos, columns=self.colunas)
-        self.combo_empresa_ativa['values'] = list(self.dados_empresas.keys()); self.combo_empresa_ativa.set(list(self.dados_empresas.keys())[0])
+        self.data_manager.df_lancamentos = pd.DataFrame(lancamentos, columns=self.colunas)
+        self.combo_empresa_ativa['values'] = list(self.data_manager.dados_empresas.keys()); self.combo_empresa_ativa.set(list(self.data_manager.dados_empresas.keys())[0])
         self.date_inicio.set_date(data_antiga); self.date_fim.set_date(hoje)
-        self.atualizar_contexto_empresa(); self.atualizar_combobox_categorias(); self.salvar_dados()
+        self.atualizar_contexto_empresa(); self.atualizar_combobox_categorias(); self.data_manager.save_all_data()
         self.set_status("Dados de teste gerados e guardados com sucesso!")
-
-# ==============================================================================
-# PONTO DE ENTRADA PRINCIPAL DA APLICAÇÃO
-# ==============================================================================
-if __name__ == "__main__":
-    root = tk.Tk()
-    root.withdraw() 
-    
-    def iniciar_app_principal():
-        root.deiconify() 
-        app = CentroCustoApp(root)
-
-    login_screen = TelaLogin(root, on_login_success=iniciar_app_principal)
-    
-    root.mainloop()
