@@ -1,12 +1,12 @@
-# app/core/data_manager.py
-# Lida com o carregamento, salvamento e manipulação dos dados da aplicação.
-
+# Conteúdo CORRETO para: app/core/data_manager.py
 import os
 import json
 import pandas as pd
 from datetime import datetime
-# --- IMPORT CORRIGIDO ---
-from app.core.constants import *
+from app.core.constants import (
+    EMPRESAS_FILE, CATEGORIAS_FILE, LANCAMENTOS_FILE, RECORRENCIAS_FILE, 
+    CONFIG_FILE_PATH, DATA_DIR
+)
 
 class DataManager:
     def __init__(self, app):
@@ -18,10 +18,10 @@ class DataManager:
         self.recorrencias = []
 
     def load_all_data(self):
-        # Nenhuma alteração necessária aqui, pois os nomes das constantes agora contêm o caminho completo
-        if os.path.exists(EMPRESAS_DATA_FILE):
+        # CORREÇÃO: Usando a variável EMPRESAS_FILE
+        if os.path.exists(EMPRESAS_FILE):
             try:
-                with open(EMPRESAS_DATA_FILE, 'r', encoding='utf-8') as f: self.dados_empresas = json.load(f)
+                with open(EMPRESAS_FILE, 'r', encoding='utf-8') as f: self.dados_empresas = json.load(f)
             except (json.JSONDecodeError, FileNotFoundError): pass
         
         if os.path.exists(CATEGORIAS_FILE):
@@ -44,10 +44,10 @@ class DataManager:
 
     def save_all_data(self):
         try:
-            # Garante que o diretório de dados exista antes de salvar
             os.makedirs(DATA_DIR, exist_ok=True)
             self.df_lancamentos.to_csv(LANCAMENTOS_FILE, index=False)
-            with open(EMPRESAS_DATA_FILE, 'w', encoding='utf-8') as f: json.dump(self.dados_empresas, f, indent=4, ensure_ascii=False)
+            # CORREÇÃO: Usando a variável EMPRESAS_FILE
+            with open(EMPRESAS_FILE, 'w', encoding='utf-8') as f: json.dump(self.dados_empresas, f, indent=4, ensure_ascii=False)
             with open(CATEGORIAS_FILE, 'w', encoding='utf-8') as f: json.dump(self.categorias, f, indent=4, ensure_ascii=False)
             with open(RECORRENCIAS_FILE, 'w', encoding='utf-8') as f: json.dump(self.recorrencias, f, indent=4, ensure_ascii=False)
             self.app.set_status("Dados guardados com sucesso!")
@@ -56,13 +56,15 @@ class DataManager:
     def save_config(self):
         try:
             configs = {'data_inicio': self.app.date_inicio.get_date().strftime('%Y-%m-%d'), 'data_fim': self.app.date_fim.get_date().strftime('%Y-%m-%d')}
-            with open(CONFIG_FILE, 'w', encoding='utf-8') as f: json.dump(configs, f, indent=4)
+            # CORREÇÃO: Usando a variável CONFIG_FILE_PATH
+            with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f: json.dump(configs, f, indent=4)
         except Exception as e: print(f"Erro ao salvar configurações: {e}") 
 
     def load_config(self):
-        if os.path.exists(CONFIG_FILE):
+        # CORREÇÃO: Usando a variável CONFIG_FILE_PATH
+        if os.path.exists(CONFIG_FILE_PATH):
             try:
-                with open(CONFIG_FILE, 'r', encoding='utf-8') as f: configs = json.load(f)
+                with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as f: configs = json.load(f)
                 if 'data_inicio' in configs: self.app.date_inicio.set_date(datetime.strptime(configs['data_inicio'], '%Y-%m-%d'))
                 if 'data_fim' in configs: self.app.date_fim.set_date(datetime.strptime(configs['data_fim'], '%Y-%m-%d'))
                 self.app.atualizar_relatorio()
