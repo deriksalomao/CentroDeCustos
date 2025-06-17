@@ -88,7 +88,7 @@ class AppPrincipal:
         self.btn_excluir_empresa = ttk.Button(frame_empresas, text="Excluir", command=self.excluir_empresa_ativa, style="Danger.TButton", width=8); self.btn_excluir_empresa.grid(row=0, column=2, padx=(5,0))
         ttk.Label(frame_empresas, text="Nova Empresa:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
         self.entry_nova_empresa = ttk.Entry(frame_empresas); self.entry_nova_empresa.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        btn_add_empresa = ttk.Button(frame_empresas, text="Adicionar", command=self.adicionar_empresa, width=8); btn_add_empresa.grid(row=1, column=2, padx=5, pady=5)
+        btn_add_empresa = ttk.Button(frame_empresas, text="Adicionar", command=self.adicionar_empresa); btn_add_empresa.grid(row=1, column=2, padx=5, pady=5)
         
         frame_categorias = ttk.LabelFrame(parent, text="Gestão de Categorias", padding=(10, 5)); frame_categorias.pack(fill="x", padx=5, pady=5, side=tk.TOP); frame_categorias.columnconfigure(1, weight=1)
         ttk.Label(frame_categorias, text="Categoria:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
@@ -96,12 +96,12 @@ class AppPrincipal:
         self.btn_excluir_categoria = ttk.Button(frame_categorias, text="Excluir", command=self.excluir_categoria, style="Danger.TButton", width=8); self.btn_excluir_categoria.grid(row=0, column=2, padx=5)
         ttk.Label(frame_categorias, text="Nova Categoria:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
         self.entry_nova_categoria = ttk.Entry(frame_categorias); self.entry_nova_categoria.grid(row=1, column=1, sticky="ew", padx=5)
-        btn_add_categoria = ttk.Button(frame_categorias, text="Adicionar", command=self.adicionar_categoria, width=8); btn_add_categoria.grid(row=1, column=2, padx=5)
+        btn_add_categoria = ttk.Button(frame_categorias, text="Adicionar", command=self.adicionar_categoria); btn_add_categoria.grid(row=1, column=2, padx=5)
         
         frame_add_cc = ttk.LabelFrame(parent, text="Gestão de Centros de Custo", padding=(10, 5)); frame_add_cc.pack(fill="x", padx=5, pady=5, side=tk.TOP); frame_add_cc.columnconfigure(1, weight=1)
         ttk.Label(frame_add_cc, text="Novo Centro de Custo:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.entry_novo_cc = ttk.Entry(frame_add_cc); self.entry_novo_cc.grid(row=0, column=1, sticky="ew", padx=5)
-        btn_add_cc = ttk.Button(frame_add_cc, text="Adicionar", command=self.adicionar_centro_custo, width=8); btn_add_cc.grid(row=0, column=2, padx=5)
+        btn_add_cc = ttk.Button(frame_add_cc, text="Adicionar", command=self.adicionar_centro_custo); btn_add_cc.grid(row=0, column=2, padx=5)
         
         btn_novo_lanc = ttk.Button(parent, text="Adicionar Novo Lançamento", command=self.abrir_janela_novo_lancamento, style="Success.TButton"); btn_novo_lanc.pack(fill='x', padx=5, pady=20, ipady=10, side=tk.TOP)
         
@@ -291,12 +291,13 @@ class AppPrincipal:
     
     def get_filtered_data(self):
         empresa = self.combo_empresa_ativa.get()
-        if not empresa or self.data_manager.df_lancamentos.empty: return pd.DataFrame(columns=self.colunas)
+        if not empresa or self.data_manager.df_lancamentos.empty: return pd.DataFrame(columns=self.data_manager.colunas)
         
         df = self.data_manager.df_lancamentos[self.data_manager.df_lancamentos['Empresa'] == empresa].copy()
         
         start_date = pd.to_datetime(self.date_inicio.get_date())
         end_date = pd.to_datetime(self.date_fim.get_date()).replace(hour=23, minute=59, second=59)
+        df['Data'] = pd.to_datetime(df['Data'])
         df = df[(df['Data'] >= start_date) & (df['Data'] <= end_date)]
         
         filters = {
@@ -313,12 +314,12 @@ class AppPrincipal:
 
     def atualizar_relatorio(self):
         for i in self.tree_relatorio.get_children(): self.tree_relatorio.delete(i)
-        df_filtrado = self.get_filtered_data()
         
         if not self.combo_empresa_ativa.get():
              self.atualizar_resumo(pd.DataFrame())
              return
 
+        df_filtrado = self.get_filtered_data()
         df_ordenado = df_filtrado.sort_values(by="Data", ascending=False)
         for index, row in df_ordenado.iterrows():
             self.tree_relatorio.insert("", "end", iid=index, values=(row["Data"].strftime("%Y-%m-%d %H:%M"), row["Empresa"], row["Centro de Custo"], row["Categoria"], row["Nome/Descrição"], row["Tipo"], f"{row['Valor']:.2f}"))
@@ -390,7 +391,7 @@ class AppPrincipal:
 
     def gerar_dados_teste(self):
         if not messagebox.askyesno("Confirmar", "Isto irá apagar todos os dados atuais e gerar um novo conjunto de dados de teste. Deseja continuar?"): return
-        self.data_manager.df_lancamentos = pd.DataFrame(columns=self.colunas)
+        self.data_manager.df_lancamentos = pd.DataFrame(columns=self.data_manager.colunas)
         self.data_manager.dados_empresas = {"Tecnologia BR": ["Desenvolvimento", "Marketing", "Infraestrutura"], "Varejo SP": ["Loja Centro", "Logística", "Administrativo"]}
         self.data_manager.categorias = ["Software", "Hardware", "Publicidade", "Salários", "Fornecedores", "Vendas", "Serviços", "Geral"]
         lancamentos = []
@@ -402,7 +403,7 @@ class AppPrincipal:
             desc = f"Venda {random.choice(['Prod A', 'Serv B'])} #{random.randint(100,999)}" if tipo == "Receita" else f"Pagamento {random.choice(['Forn X', 'Soft Y'])}"
             valor = random.uniform(500, 15000) if tipo == "Receita" else random.uniform(100, 8000)
             lancamentos.append([data, empresa, cc, cat, desc, tipo, valor])
-        self.data_manager.df_lancamentos = pd.DataFrame(lancamentos, columns=self.colunas)
+        self.data_manager.df_lancamentos = pd.DataFrame(lancamentos, columns=self.data_manager.colunas)
         self.combo_empresa_ativa['values'] = list(self.data_manager.dados_empresas.keys()); self.combo_empresa_ativa.set(list(self.data_manager.dados_empresas.keys())[0])
         self.date_inicio.set_date(data_antiga); self.date_fim.set_date(hoje)
         self.atualizar_contexto_empresa(); self.atualizar_combobox_categorias(); self.data_manager.save_all_data()

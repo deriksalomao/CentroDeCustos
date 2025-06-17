@@ -2,7 +2,6 @@
 # Ponto de entrada principal da aplicação.
 
 import tkinter as tk
-# --- IMPORTS CORRIGIDOS ---
 from app.ui.ui_login import TelaLogin
 from app.ui.app_principal import AppPrincipal
 

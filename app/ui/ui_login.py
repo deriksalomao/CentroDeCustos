@@ -1,53 +1,64 @@
-# ui_login.py
-# Contém a classe e a interface da tela de login.
-
+# uploaded:CentroDeCustos/app/ui/ui_login.py
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, Toplevel
+from app.ui.app_principal import AppPrincipal
+import hashlib  
 
-class TelaLogin:
-    def __init__(self, root, on_login_success):
+class LoginWindow:
+    def __init__(self, root):
         self.root = root
-        self.on_login_success = on_login_success
-        self.root.title("Login - Sistema de Gestão Financeira")
-        self.root.geometry("400x300")
+        self.root.title("Login - Centro de Custos")
+        self.root.geometry("300x150")
+        self.root.resizable(False, False)
+
+        # Centralizar a janela
+        self.root.update_idletasks()
+        width = self.root.winfo_width()
+        height = self.root.winfo_height()
+        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
+
+        self.frame = tk.Frame(self.root, padx=10, pady=10)
+        self.frame.pack(expand=True)
+
+        self.label_user = tk.Label(self.frame, text="Usuário:")
+        self.label_user.grid(row=0, column=0, sticky="w", pady=5)
+        self.entry_user = tk.Entry(self.frame)
+        self.entry_user.grid(row=0, column=1, sticky="ew")
+
+        self.label_pwd = tk.Label(self.frame, text="Senha:")
+        self.label_pwd.grid(row=1, column=0, sticky="w", pady=5)
+        self.entry_pwd = tk.Entry(self.frame, show="*")
+        self.entry_pwd.grid(row=1, column=1, sticky="ew")
+        self.entry_pwd.bind("<Return>", self._login) # Adiciona bind para a tecla Enter
+
+        self.login_button = tk.Button(self.frame, text="Login", command=self._login)
+        self.login_button.grid(row=2, column=0, columnspan=2, pady=10)
+
+        # Foco no campo de usuário ao iniciar
+        self.entry_user.focus_set()
         
-        self.root.deiconify()
-        self.root.eval('tk::PlaceWindow . center')
+    def _hash_password(self, password):
+        """Gera um hash SHA-256 para a senha fornecida.""" # <--- NOVO: Função para criar o hash
+        return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-        self.frame = ttk.Frame(self.root, padding="30 30 30 30")
-        self.frame.pack(fill='both', expand=True)
+    def _login(self, event=None): # Adicionado event=None para o bind
+        user = self.entry_user.get()
+        pwd = self.entry_pwd.get()
 
-        style = ttk.Style()
-        style.configure("TLabel", font=("Segoe UI", 11))
-        style.configure("TButton", font=("Segoe UI", 11, "bold"))
-        style.configure("TEntry", font=("Segoe UI", 11))
+        # Hash da senha "admin". Nunca armazene a senha em texto plano.
+        # Você pode gerar este hash executando: print(self._hash_password('admin'))
+        correct_hashed_pwd = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
         
-        ttk.Label(self.frame, text="Login do Sistema", font=("Segoe UI", 16, "bold")).pack(pady=(0, 20))
+        # Compara o hash da senha digitada com o hash correto
+        hashed_input_pwd = self._hash_password(pwd)
 
-        ttk.Label(self.frame, text="Usuário:").pack(anchor='w')
-        self.user_entry = ttk.Entry(self.frame, width=30)
-        self.user_entry.pack(pady=5)
-        self.user_entry.focus()
-
-        ttk.Label(self.frame, text="Senha:").pack(anchor='w')
-        self.pass_entry = ttk.Entry(self.frame, show="*", width=30)
-        self.pass_entry.pack(pady=5)
-        self.pass_entry.bind("<Return>", self.verificar_login)
-
-        self.status_label = ttk.Label(self.frame, text="", foreground="red")
-        self.status_label.pack(pady=(10, 0))
-
-        btn_login = ttk.Button(self.frame, text="Entrar", command=self.verificar_login)
-        btn_login.pack(pady=20, ipady=5, fill='x')
-
-    def verificar_login(self, event=None):
-        usuario = self.user_entry.get()
-        senha = self.pass_entry.get()
-
-        if usuario == "admin" and senha == "admin":
-            for widget in self.frame.winfo_children():
-                widget.destroy()
-            self.frame.destroy()
-            self.on_login_success()
+        if user == "admin" and hashed_input_pwd == correct_hashed_pwd:
+            self.root.destroy()
+            root = tk.Tk()
+            app = AppPrincipal(root)
+            root.mainloop()
         else:
-            self.status_label.config(text="Usuário ou senha inválidos.")
+            messagebox.showerror("Erro de Login", "Usuário ou senha inválidos.")
+            self.entry_pwd.delete(0, 'end') # Limpa o campo de senha

@@ -1,24 +1,36 @@
-# app/core/constants.py
-# Armazena os nomes de todos os ficheiros de configuração e dados.
-
+# uploaded:CentroDeCustos/app/core/constants.py
 import os
+from pathlib import Path
 
-# Encontra o caminho absoluto para a pasta raiz do projeto
-# __file__ -> .../app/core/constants.py
-# dirname(__file__) -> .../app/core
-# dirname(dirname(__file__)) -> .../app
-# dirname(dirname(dirname(__file__))) -> /caminho/completo/para/CENTRODECUSTOS/
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# --- ABORDAGEM MODERNA COM PATHLIB ---
+# Define o diretório base do projeto (a pasta 'CentroDeCustos')
+# Path(__file__) -> o arquivo atual (constants.py)
+# .resolve() -> obtém o caminho absoluto
+# .parent -> sobe um nível (para a pasta 'core')
+# .parent -> sobe mais um nível (para a pasta 'app')
+# .parent -> sobe mais um nível (para a raiz do projeto 'CentroDeCustos')
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Define o caminho para a pasta 'data' e para o arquivo de config na raiz
-DATA_DIR = os.path.join(BASE_DIR, 'data')
-CONFIG_FILE_PATH = os.path.join(BASE_DIR, 'config.json')
+# Constrói os caminhos usando o operador de barra (/), que funciona em todos os SO
+CONFIG_FILE_PATH = BASE_DIR / "config.json"
+DATA_DIR = BASE_DIR / "data"
+LANCAMENTOS_FILE = DATA_DIR / "lancamentos.csv"
+EMPRESAS_FILE = DATA_DIR / "empresas_data.json"
+CATEGORIAS_FILE = DATA_DIR / "categorias.json"
+RECORRENCIAS_FILE = DATA_DIR / "recorrencias.json"
 
-# Cria os caminhos completos para cada arquivo de dados
-LANCAMENTOS_FILE = os.path.join(DATA_DIR, 'lancamentos.csv')
-EMPRESAS_DATA_FILE = os.path.join(DATA_DIR, 'empresas_data.json')
-CATEGORIAS_FILE = os.path.join(DATA_DIR, 'categorias.json')
-RECORRENCIAS_FILE = os.path.join(DATA_DIR, 'recorrencias.json')
+# --- CÓDIGO ANTIGO (COMENTADO PARA REFERÊNCIA) ---
+# # Define o diretório base do projeto.
+# # __file__ é o caminho para o arquivo atual (constants.py).
+# # os.path.dirname() obtém o diretório desse arquivo.
+# # Repetimos para subir na hierarquia de pastas até a raiz do projeto.
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Renomeado para evitar conflito de nomes e aponta para o caminho completo
-CONFIG_FILE = CONFIG_FILE_PATH
+# # Caminhos para arquivos de configuração e dados
+# CONFIG_FILE_PATH = os.path.join(BASE_DIR, 'config.json')
+# CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')  # Redundante, pode ser removido
+# DATA_DIR = os.path.join(BASE_DIR, 'data')
+# LANCAMENTOS_FILE = os.path.join(DATA_DIR, 'lancamentos.csv')
+# EMPRESAS_FILE = os.path.join(DATA_DIR, 'empresas_data.json')
+# CATEGORIAS_FILE = os.path.join(DATA_DIR, 'categorias.json')
+# RECORRENCIAS_FILE = os.path.join(DATA_DIR, 'recorrencias.json')
