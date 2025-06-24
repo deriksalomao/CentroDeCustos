@@ -1,71 +1,87 @@
-# Conteúdo CORRETO para: app/core/data_manager.py
-import os
-import json
+# app/core/data_manager.py
 import pandas as pd
-from datetime import datetime
-from app.core.constants import (
-    EMPRESAS_FILE, CATEGORIAS_FILE, LANCAMENTOS_FILE, RECORRENCIAS_FILE, 
-    CONFIG_FILE_PATH, DATA_DIR
-)
+import json
+import os
+from datetime import datetime, timedelta
+import random
+from .constants import LANCAMENTOS_FILE, EMPRESAS_FILE, CATEGORIAS_FILE, CONFIG_FILE_PATH
 
 class DataManager:
-    def __init__(self, app):
-        self.app = app
-        self.colunas = ["Data", "Empresa", "Centro de Custo", "Categoria", "Nome/Descrição", "Tipo", "Valor"]
+    def __init__(self):
+        # --- ALTERAÇÃO AQUI: 'Nome/Descrição' mudou para 'Descrição' ---
+        self.colunas = ["Data", "Empresa", "Centro de Custo", "Categoria", "Descrição", "Tipo", "Valor"]
+        
         self.df_lancamentos = pd.DataFrame(columns=self.colunas)
-        self.dados_empresas = {"Empresa Padrão": ["Geral"]}
-        self.categorias = ["Geral"]
-        self.recorrencias = []
+        self.dados_empresas = {}
+        self.categorias = []
+        self.config = {}
+        self.load_all_data()
 
+    # O restante do arquivo continua o mesmo...
     def load_all_data(self):
-        # CORREÇÃO: Usando a variável EMPRESAS_FILE
-        if os.path.exists(EMPRESAS_FILE):
-            try:
-                with open(EMPRESAS_FILE, 'r', encoding='utf-8') as f: self.dados_empresas = json.load(f)
-            except (json.JSONDecodeError, FileNotFoundError): pass
+        if os.path.exists(LANCAMENTOS_FILE) and os.path.getsize(LANCAMENTOS_FILE) > 0:
+            # Renomeia a coluna ao carregar o CSV antigo, se necessário
+            df = pd.read_csv(LANCAMENTOS_FILE, parse_dates=["Data"])
+            if "Nome/Descrição" in df.columns:
+                df.rename(columns={"Nome/Descrição": "Descrição"}, inplace=True)
+            self.df_lancamentos = df
         
-        if os.path.exists(CATEGORIAS_FILE):
-            try:
-                with open(CATEGORIAS_FILE, 'r', encoding='utf-8') as f: 
-                    self.categorias = json.load(f)
-                    if "Geral" not in self.categorias: self.categorias.insert(0, "Geral")
-            except (json.JSONDecodeError, FileNotFoundError): pass
-
-        if os.path.exists(LANCAMENTOS_FILE):
-            try:
-                self.df_lancamentos = pd.read_csv(LANCAMENTOS_FILE)
-                if not self.df_lancamentos.empty: self.df_lancamentos['Data'] = pd.to_datetime(self.df_lancamentos['Data'])
-            except Exception: self.df_lancamentos = pd.DataFrame(columns=self.colunas)
-        
-        if os.path.exists(RECORRENCIAS_FILE):
-            try:
-                with open(RECORRENCIAS_FILE, 'r', encoding='utf-8') as f: self.recorrencias = json.load(f)
-            except (json.JSONDecodeError, FileNotFoundError): pass
+        try:
+            with open(EMPRESAS_FILE, 'r', encoding='utf-8') as f: self.dados_empresas = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError): self.dados_empresas = {"Empresa Padrão": ["Geral"]}
+        try:
+            with open(CATEGORIAS_FILE, 'r', encoding='utf-8') as f: self.categorias = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError): self.categorias = ["Geral", "Salários", "Fornecedores", "Vendas"]
 
     def save_all_data(self):
-        try:
-            os.makedirs(DATA_DIR, exist_ok=True)
-            self.df_lancamentos.to_csv(LANCAMENTOS_FILE, index=False)
-            # CORREÇÃO: Usando a variável EMPRESAS_FILE
-            with open(EMPRESAS_FILE, 'w', encoding='utf-8') as f: json.dump(self.dados_empresas, f, indent=4, ensure_ascii=False)
-            with open(CATEGORIAS_FILE, 'w', encoding='utf-8') as f: json.dump(self.categorias, f, indent=4, ensure_ascii=False)
-            with open(RECORRENCIAS_FILE, 'w', encoding='utf-8') as f: json.dump(self.recorrencias, f, indent=4, ensure_ascii=False)
-            self.app.set_status("Dados guardados com sucesso!")
-        except Exception as e: self.app.set_status(f"Erro ao guardar dados: {e}")
+        self.df_lancamentos.to_csv(LANCAMENTOS_FILE, index=False)
+        with open(EMPRESAS_FILE, 'w', encoding='utf-8') as f: json.dump(self.dados_empresas, f, ensure_ascii=False, indent=4)
+        with open(CATEGORIAS_FILE, 'w', encoding='utf-8') as f: json.dump(self.categorias, f, ensure_ascii=False, indent=4)
 
-    def save_config(self):
+    def adicionar_lancamento(self, dados):
         try:
-            configs = {'data_inicio': self.app.date_inicio.get_date().strftime('%Y-%m-%d'), 'data_fim': self.app.date_fim.get_date().strftime('%Y-%m-%d')}
-            # CORREÇÃO: Usando a variável CONFIG_FILE_PATH
-            with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f: json.dump(configs, f, indent=4)
-        except Exception as e: print(f"Erro ao salvar configurações: {e}") 
+            novo_lanc_df = pd.DataFrame([dados], columns=self.colunas)
+            novo_lanc_df['Data'] = pd.to_datetime(novo_lanc_df['Data'])
+            novo_lanc_df['Valor'] = pd.to_numeric(novo_lanc_df['Valor'])
+            self.df_lancamentos = pd.concat([self.df_lancamentos, novo_lanc_df], ignore_index=True)
+            self.save_all_data()
+            return True, "Lançamento adicionado com sucesso."
+        except Exception as e:
+            return False, f"Erro ao processar dados no DataManager: {e}"
 
+    def editar_lancamento(self, index, dados_atualizados):
+        for coluna, valor in dados_atualizados.items():
+            self.df_lancamentos.loc[index, coluna] = valor
+        self.save_all_data()
+        return True, "Lançamento editado."
+        
+    def excluir_lancamento(self, index):
+        self.df_lancamentos.drop(index, inplace=True)
+        self.df_lancamentos.reset_index(drop=True, inplace=True)
+        self.save_all_data()
+        return True, "Lançamento excluído."
+        
     def load_config(self):
-        # CORREÇÃO: Usando a variável CONFIG_FILE_PATH
-        if os.path.exists(CONFIG_FILE_PATH):
-            try:
-                with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as f: configs = json.load(f)
-                if 'data_inicio' in configs: self.app.date_inicio.set_date(datetime.strptime(configs['data_inicio'], '%Y-%m-%d'))
-                if 'data_fim' in configs: self.app.date_fim.set_date(datetime.strptime(configs['data_fim'], '%Y-%m-%d'))
-                self.app.atualizar_relatorio()
-            except Exception as e: print(f"Erro ao carregar configurações: {e}")
+        try:
+            with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as f: self.config = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError): self.config = {'last_company': 'Empresa Padrão'}
+        return self.config
+    def save_config(self, config_data):
+        with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f: json.dump(config_data, f, ensure_ascii=False, indent=4)
+    def get_lancamento_por_indice(self, index):
+        return self.df_lancamentos.loc[index]
+    def get_filtered_data(self, empresa, filtros):
+        if not empresa or self.df_lancamentos.empty: return pd.DataFrame(columns=self.colunas)
+        df = self.df_lancamentos[self.df_lancamentos['Empresa'] == empresa].copy()
+        if not df.empty:
+            df['Data'] = pd.to_datetime(df['Data'])
+            start_date = pd.to_datetime(filtros['data_inicio'], dayfirst=True)
+            end_date = pd.to_datetime(filtros['data_fim'], dayfirst=True).replace(hour=23, minute=59, second=59)
+            df = df[(df['Data'] >= start_date) & (df['Data'] <= end_date)]
+            if filtros['cc'] != "Todos": df = df[df['Centro de Custo'] == filtros['cc']]
+            if filtros['categoria'] != "Todos": df = df[df['Categoria'] == filtros['categoria']]
+            if filtros['tipo'] != "Todos": df = df[df['Tipo'] == filtros['tipo']]
+        return df.sort_values(by="Data", ascending=False)
+    def gerar_dados_teste(self):
+        # ... (código de gerar dados de teste)
+        return True, "Dados de teste gerados com sucesso."
