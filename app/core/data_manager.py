@@ -8,7 +8,6 @@ from .constants import LANCAMENTOS_FILE, EMPRESAS_FILE, CATEGORIAS_FILE, CONFIG_
 
 class DataManager:
     def __init__(self):
-        # ADICIONAMOS as colunas de abastecimento
         self.colunas = ["Data", "Empresa", "Centro de Custo", "Veículo", "Categoria", "Descrição", "Tipo", "Valor", "Cliente", "Status", "Litros", "Preco_Litro", "KM_Odometro"]
         
         self.df_lancamentos = pd.DataFrame(columns=self.colunas)
@@ -21,14 +20,12 @@ class DataManager:
 
     def load_all_data(self):
         if os.path.exists(LANCAMENTOS_FILE) and os.path.getsize(LANCAMENTOS_FILE) > 0:
-            df = pd.read_csv(LANCAMENTOS_FILE, parse_dates=["Data"])
-            # Adiciona colunas novas se não existirem nos dados antigos, para compatibilidade
+            df = pd.read_csv(LANCAMENTOS_FILE, parse_dates=["Data"], keep_default_na=False, na_values=[''])
             for col in ['Veículo', 'Cliente', 'Status', 'Litros', 'Preco_Litro', 'KM_Odometro']:
                 if col not in df.columns:
                     df[col] = 'N/A'
             self.df_lancamentos = df
         
-        # Carregamento dos outros arquivos (empresas, categorias, etc.)
         try:
             with open(EMPRESAS_FILE, 'r', encoding='utf-8') as f: self.dados_empresas = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError): self.dados_empresas = {"Sua Transportadora": ["Administrativo", "Operacional"]}
@@ -54,7 +51,6 @@ class DataManager:
 
     def adicionar_lancamento(self, dados):
         try:
-            # Garante que as novas colunas existam no dicionário
             for col in ['Cliente', 'Status', 'Litros', 'Preco_Litro', 'KM_Odometro']:
                 dados.setdefault(col, 'N/A')
             
@@ -93,17 +89,19 @@ class DataManager:
         
     def get_filtered_data(self, empresa, filtros):
         if not empresa or self.df_lancamentos.empty: return pd.DataFrame(columns=self.colunas)
+        
         df = self.df_lancamentos[self.df_lancamentos['Empresa'] == empresa].copy()
+        
         if not df.empty:
             df['Data'] = pd.to_datetime(df['Data'])
             start_date = pd.to_datetime(filtros['data_inicio'], dayfirst=True)
             end_date = pd.to_datetime(filtros['data_fim'], dayfirst=True).replace(hour=23, minute=59, second=59)
             df = df[(df['Data'] >= start_date) & (df['Data'] <= end_date)]
             
-            if filtros['veiculo'] != "Todos": df = df[df['Veículo'] == filtros['veiculo']]
-            if filtros['cc'] != "Todos": df = df[df['Centro de Custo'] == filtros['cc']]
-            if filtros['categoria'] != "Todos": df = df[df['Categoria'] == filtros['categoria']]
-            if filtros['tipo'] != "Todos": df = df[df['Tipo'] == filtros['tipo']]
+            if filtros.get('veiculo') != "Todos": df = df[df['Veículo'] == filtros['veiculo']]
+            if filtros.get('cc') != "Todos": df = df[df['Centro de Custo'] == filtros['cc']]
+            if filtros.get('categoria') != "Todos": df = df[df['Categoria'] == filtros['categoria']]
+            if filtros.get('tipo') != "Todos": df = df[df['Tipo'] == filtros['tipo']]
             if filtros.get('cliente') and filtros['cliente'] != "Todos": df = df[df['Cliente'] == filtros['cliente']]
             if filtros.get('status') and filtros['status'] != "Todos": df = df[df['Status'] == filtros['status']]
             

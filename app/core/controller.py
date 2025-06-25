@@ -2,11 +2,15 @@
 from tkinter import messagebox, filedialog
 import pandas as pd
 from datetime import datetime
+import math
 
 class AppController:
     def __init__(self, model, view):
         self.model = model
         self.view = view
+        self.current_page = 1
+        self.items_per_page = 100
+        self.full_filtered_df = pd.DataFrame()
 
     def iniciar_app(self):
         config = self.model.load_config()
@@ -14,50 +18,78 @@ class AppController:
         last_company = config.get('last_company', 'Empresa Padrão')
         if last_company in self.model.dados_empresas:
             self.view.set_empresa_ativa(last_company)
+        else:
+            empresas = list(self.model.dados_empresas.keys())
+            if empresas: self.view.set_empresa_ativa(empresas[0])
         self.on_empresa_selecionada()
 
     def on_empresa_selecionada(self, event=None):
-        empresa_ativa = self.view.get_empresa_ativa()
-        if not empresa_ativa: return
-        
-        centros_custo = ["Todos"] + self.model.dados_empresas.get(empresa_ativa, [])
-        veiculos_filtro = ["Todos", "N/A"] + self.model.veiculos
-        clientes_filtro = ["Todos", "N/A"] + self.model.clientes
-        categorias_filtro = ["Todos"] + self.model.categorias
-        
-        self.view.atualizar_filtros_combobox(centros_custo, veiculos_filtro, clientes_filtro, categorias_filtro)
+        self.aplicar_filtros_e_resetar_pagina()
+
+    def aplicar_filtros_e_resetar_pagina(self):
+        self.current_page = 1
         self.atualizar_relatorio_e_resumo()
 
     def atualizar_relatorio_e_resumo(self):
         empresa_ativa = self.view.get_empresa_ativa()
+        if not empresa_ativa:
+            self.view.set_status("Nenhuma empresa selecionada.")
+            return
+
         filtros = self.view.get_filtros()
-        df_filtrado = self.model.get_filtered_data(empresa_ativa, filtros)
-        self.view.atualizar_treeview_lancamentos(df_filtrado)
-        self.view.atualizar_resumo_financeiro(df_filtrado)
-        self.view.atualizar_graficos(df_filtrado)
-        self.view.set_status("Relatório atualizado.")
+        self.full_filtered_df = self.model.get_filtered_data(empresa_ativa, filtros)
+        
+        total_items = len(self.full_filtered_df)
+        total_pages = math.ceil(total_items / self.items_per_page) if total_items > 0 else 1
+        
+        if self.current_page > total_pages: self.current_page = total_pages
+            
+        start_index = (self.current_page - 1) * self.items_per_page
+        end_index = start_index + self.items_per_page
+        df_paginado = self.full_filtered_df.iloc[start_index:end_index]
+        
+        self.view.atualizar_treeview_lancamentos(df_paginado)
+        self.view.atualizar_resumo_financeiro(self.full_filtered_df)
+        self.view.atualizar_graficos(self.full_filtered_df)
+        self.view.update_pagination_controls(self.current_page, total_pages)
+        self.view.set_status(f"A exibir {len(df_paginado)} de {total_items} registos.")
+
+    def go_to_next_page(self):
+        total_pages = math.ceil(len(self.full_filtered_df) / self.items_per_page) if len(self.full_filtered_df) > 0 else 1
+        if self.current_page < total_pages:
+            self.current_page += 1
+            self.atualizar_relatorio_e_resumo()
+
+    def go_to_previous_page(self):
+        if self.current_page > 1:
+            self.current_page -= 1
+            self.atualizar_relatorio_e_resumo()
+
+    def change_items_per_page(self, event=None):
+        self.items_per_page = int(self.view.combo_itens_por_pagina.get())
+        self.aplicar_filtros_e_resetar_pagina()
+
+    def limpar_filtros(self):
+        self.view.resetar_campos_de_filtro()
+        self.aplicar_filtros_e_resetar_pagina()
     
     def exportar_para_excel(self):
-        empresa_ativa = self.view.get_empresa_ativa()
-        filtros = self.view.get_filtros()
-        df_para_exportar = self.model.get_filtered_data(empresa_ativa, filtros)
-        if df_para_exportar.empty:
-            self.view.mostrar_info("Não há dados para exportar com os filtros atuais."); return
+        if self.full_filtered_df.empty:
+            self.view.mostrar_info("Não há dados para exportar com os filtros atuais.")
+            return
         try:
-            caminho_arquivo = filedialog.asksaveasfilename(title="Salvar Relatório como...", defaultextension=".xlsx", filetypes=[("Arquivos Excel", "*.xlsx"), ("Todos os arquivos", "*.*")])
+            caminho_arquivo = filedialog.asksaveasfilename(title="Salvar Relatório como...", defaultextension=".xlsx", filetypes=[("Arquivos Excel", "*.xlsx"), ("Todos os ficheiros", "*.*")])
             if caminho_arquivo:
+                df_para_exportar = self.full_filtered_df.copy()
                 df_para_exportar['Data'] = pd.to_datetime(df_para_exportar['Data']).dt.strftime('%d/%m/%Y')
                 df_para_exportar.to_excel(caminho_arquivo, index=False, engine='openpyxl')
                 self.view.set_status(f"Relatório salvo com sucesso em: {caminho_arquivo}")
                 self.view.mostrar_info("Relatório exportado com sucesso!")
         except Exception as e:
-            self.view.mostrar_info(f"Ocorreu um erro ao exportar o arquivo:\n{e}"); self.view.set_status("Erro ao exportar relatório.")
+            self.view.mostrar_info(f"Ocorreu um erro ao exportar o ficheiro:\n{e}")
+            self.view.set_status("Erro ao exportar relatório.")
 
-    def limpar_filtros(self):
-        self.view.resetar_campos_de_filtro()
-        self.atualizar_relatorio_e_resumo()
-
-    def adicionar_cliente(self):
+    def adicionar_cliente(self, *args):
         novo_cliente = self.view.get_novo_cliente().strip().title()
         if not novo_cliente: return
         if novo_cliente in self.model.clientes:
@@ -66,7 +98,7 @@ class AppController:
         self.on_empresa_selecionada()
         self.view.set_status(f"Cliente '{novo_cliente}' adicionado.")
 
-    def adicionar_veiculo(self):
+    def adicionar_veiculo(self, *args):
         novo_veiculo = self.view.get_novo_veiculo().strip().upper()
         if not novo_veiculo: return
         if novo_veiculo in self.model.veiculos:
@@ -75,7 +107,7 @@ class AppController:
         self.on_empresa_selecionada()
         self.view.set_status(f"Veículo '{novo_veiculo}' adicionado.")
 
-    def adicionar_empresa(self):
+    def adicionar_empresa(self, *args):
         nova_empresa = self.view.get_nova_empresa().strip().title()
         if not nova_empresa: return
         if nova_empresa in self.model.dados_empresas:
@@ -86,7 +118,7 @@ class AppController:
         self.on_empresa_selecionada()
         self.view.set_status(f"Empresa '{nova_empresa}' adicionada.")
 
-    def adicionar_categoria(self):
+    def adicionar_categoria(self, *args):
         nova_cat = self.view.get_nova_categoria().strip().title()
         if not nova_cat: return
         if nova_cat in self.model.categorias:
@@ -95,7 +127,7 @@ class AppController:
         self.on_empresa_selecionada()
         self.view.set_status(f"Categoria '{nova_cat}' adicionada.")
         
-    def adicionar_centro_custo(self):
+    def adicionar_centro_custo(self, *args):
         empresa = self.view.get_empresa_ativa()
         novo_cc = self.view.get_novo_cc().strip().title()
         if not novo_cc: return
@@ -124,7 +156,7 @@ class AppController:
         dados_lancamento['Empresa'] = self.view.get_empresa_ativa()
         success, message = self.model.adicionar_lancamento(dados_lancamento)
         if success:
-            self.atualizar_relatorio_e_resumo()
+            self.aplicar_filtros_e_resetar_pagina()
             self.view.set_status(message)
 
     def abrir_janela_edicao(self, event):
@@ -151,7 +183,7 @@ class AppController:
     def salvar_edicao_lancamento(self, index, dados_atualizados):
         success, message = self.model.editar_lancamento(index, dados_atualizados)
         if success:
-            self.atualizar_relatorio_e_resumo()
+            self.aplicar_filtros_e_resetar_pagina()
             self.view.set_status(message)
 
     def excluir_lancamento_selecionado(self):
@@ -161,18 +193,24 @@ class AppController:
         if self.view.confirmar_acao("Confirmar Exclusão", "Deseja excluir o lançamento selecionado?"):
             success, message = self.model.excluir_lancamento(index)
             if success:
-                self.atualizar_relatorio_e_resumo()
+                self.aplicar_filtros_e_resetar_pagina()
                 self.view.set_status(message)
     
     def gerar_dados_teste(self):
         if self.view.confirmar_acao("Gerar Dados", "Isso irá apagar todos os dados atuais. Continuar?"):
             success, message = self.model.gerar_dados_teste()
             if success:
-                self.iniciar_app()
+                self.model.load_all_data() # Recarrega os dados da memória
+                empresas = list(self.model.dados_empresas.keys())
+                self.view.atualizar_empresas_combobox(empresas)
+                if empresas:
+                    self.view.set_empresa_ativa(empresas[0]) # Seleciona a primeira empresa
+                
+                self.view.resetar_campos_de_filtro() # CORREÇÃO CRÍTICA: Reseta os filtros de data
+                self.aplicar_filtros_e_resetar_pagina() # Atualiza a UI com os novos dados
                 self.view.set_status(message)
             else:
                 self.view.mostrar_info(f"Erro ao gerar dados: {message}")
-
 
     def ao_fechar(self):
         config = {'last_company': self.view.get_empresa_ativa()}

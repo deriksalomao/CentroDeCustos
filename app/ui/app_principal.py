@@ -2,9 +2,10 @@
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tkinter import messagebox, END
-from datetime import datetime
+from datetime import datetime, timedelta
 import traceback
 import pandas as pd
+import math
 
 from .ui_graficos import GraficosFrame
 from app.core.data_manager import DataManager
@@ -41,6 +42,7 @@ class AppPrincipal:
         self.total_despesas_var = ttk.StringVar(value="R$ 0.00")
         self.saldo_final_var = ttk.StringVar(value="R$ 0.00")
         self.status_var = ttk.StringVar(value="Pronto.")
+        self.pagination_var = ttk.StringVar(value="Página 1 de 1")
         self.model = DataManager()
         self.controller = AppController(self.model, self)
         self.criar_widgets()
@@ -68,19 +70,14 @@ class AppPrincipal:
         ttk.Button(frame_acoes, text="Adicionar Novo Lançamento", command=self.controller.abrir_janela_novo_lancamento, bootstyle="success").pack(fill=X, ipady=5)
         
         frame_gestao = ttk.LabelFrame(parent, text="Cadastros", padding=10); frame_gestao.pack(fill=X, pady=(0, 10))
-        
         self.entry_novo_cliente = PlaceholderEntry(frame_gestao, placeholder="Novo Cliente"); self.entry_novo_cliente.pack(fill=X, pady=(0,5))
         ttk.Button(frame_gestao, text="Adicionar Cliente", command=self.controller.adicionar_cliente, bootstyle="outline-primary").pack(fill=X, pady=(0,10))
-
         self.entry_novo_veiculo = PlaceholderEntry(frame_gestao, placeholder="Novo Veículo (Placa)"); self.entry_novo_veiculo.pack(fill=X, pady=(0,5))
         ttk.Button(frame_gestao, text="Adicionar Veículo", command=self.controller.adicionar_veiculo, bootstyle="outline-primary").pack(fill=X, pady=(0,10))
-        
         self.entry_novo_cc = PlaceholderEntry(frame_gestao, placeholder="Novo Centro de Custo"); self.entry_novo_cc.pack(fill=X, pady=(0,5))
         ttk.Button(frame_gestao, text="Adicionar Centro de Custo", command=self.controller.adicionar_centro_custo, bootstyle="outline-primary").pack(fill=X, pady=(0,10))
-        
         self.entry_nova_categoria = PlaceholderEntry(frame_gestao, placeholder="Nova Categoria (Ex: Pedágio)"); self.entry_nova_categoria.pack(fill=X, pady=(0,5))
         ttk.Button(frame_gestao, text="Adicionar Categoria", command=self.controller.adicionar_categoria, bootstyle="outline-primary").pack(fill=X, pady=(0,10))
-
         self.entry_nova_empresa = PlaceholderEntry(frame_gestao, placeholder="Nova Empresa (Matriz/Filial)"); self.entry_nova_empresa.pack(fill=X, pady=(0,5))
         ttk.Button(frame_gestao, text="Adicionar Empresa", command=self.controller.adicionar_empresa, bootstyle="outline-primary").pack(fill=X)
         
@@ -95,10 +92,17 @@ class AppPrincipal:
     def criar_painel_direito(self, parent):
         filter_frame = ttk.LabelFrame(parent, text="Filtros e Ações", padding=10); filter_frame.pack(fill=X, pady=(0, 10))
         top_filter_frame = ttk.Frame(filter_frame); top_filter_frame.pack(fill=X, pady=(0,10)); top_filter_frame.columnconfigure((1,3,5), weight=1)
+        
+        hoje = datetime.now()
+        data_inicio_default = hoje - timedelta(days=365)
+
         ttk.Label(top_filter_frame, text="De:").grid(row=0, column=0, padx=(0,5), pady=5, sticky=W)
-        self.date_inicio = ttk.DateEntry(top_filter_frame, dateformat='%d/%m/%Y'); self.date_inicio.grid(row=0, column=1, sticky=EW, padx=(0,10))
+        self.date_inicio = ttk.DateEntry(top_filter_frame, dateformat='%d/%m/%Y', startdate=data_inicio_default)
+        self.date_inicio.grid(row=0, column=1, sticky=EW, padx=(0,10))
+        
         ttk.Label(top_filter_frame, text="Até:").grid(row=0, column=2, padx=(0,5), pady=5, sticky=W)
-        self.date_fim = ttk.DateEntry(top_filter_frame, dateformat='%d/%m/%Y'); self.date_fim.grid(row=0, column=3, sticky=EW, padx=(0,10))
+        self.date_fim = ttk.DateEntry(top_filter_frame, dateformat='%d/%m/%Y')
+        self.date_fim.grid(row=0, column=3, sticky=EW, padx=(0,10))
         
         ttk.Label(top_filter_frame, text="Centro de Custo:").grid(row=1, column=0, padx=(0,5), pady=5, sticky=W)
         self.combo_filtro_cc = ttk.Combobox(top_filter_frame, state="readonly"); self.combo_filtro_cc.grid(row=1, column=1, sticky=EW, padx=(0,10))
@@ -116,9 +120,10 @@ class AppPrincipal:
         self.combo_filtro_status = ttk.Combobox(top_filter_frame, state="readonly", values=["Todos", "Pago", "Pendente"]); self.combo_filtro_status.grid(row=3, column=3, sticky=EW, padx=(0,10)); self.combo_filtro_status.set("Todos")
 
         action_filter_frame = ttk.Frame(filter_frame); action_filter_frame.pack(fill=X, pady=(5,10))
-        ttk.Button(action_filter_frame, text="Aplicar Filtros", command=self.controller.atualizar_relatorio_e_resumo, bootstyle="primary").pack(side=LEFT)
+        ttk.Button(action_filter_frame, text="Aplicar Filtros", command=self.controller.aplicar_filtros_e_resetar_pagina, bootstyle="primary").pack(side=LEFT)
         ttk.Button(action_filter_frame, text="Limpar Filtros", command=self.controller.limpar_filtros, bootstyle="secondary-outline").pack(side=LEFT, padx=10)
         ttk.Button(action_filter_frame, text="Exportar para Excel", command=self.controller.exportar_para_excel, bootstyle="info").pack(side=LEFT)
+        
         notebook = ttk.Notebook(parent); notebook.pack(fill=BOTH, expand=True)
         registros_tab = ttk.Frame(notebook); notebook.add(registros_tab, text='Registos Detalhados')
         self.graficos_tab = GraficosFrame(notebook); notebook.add(self.graficos_tab, text='Gráficos Visuais')
@@ -130,40 +135,42 @@ class AppPrincipal:
         self.tree_relatorio.configure(yscrollcommand=ys.set, xscrollcommand=xs.set)
         self.tree_relatorio.grid(row=0, column=0, sticky='nsew'); ys.grid(row=0, column=1, sticky='ns'); xs.grid(row=1, column=0, sticky='ew')
         tree_container.grid_rowconfigure(0, weight=1); tree_container.grid_columnconfigure(0, weight=1)
-        
         for col in cols: self.tree_relatorio.heading(col, text=col)
         self.tree_relatorio.column("Valor", anchor="e", width=120)
-        self.tree_relatorio.column("Data", anchor="center", width=90)
-        self.tree_relatorio.column("Tipo", anchor="center", width=80)
-        self.tree_relatorio.column("Status", anchor="center", width=80)
-
         self.tree_relatorio.bind("<Double-1>", self.controller.abrir_janela_edicao)
         
+        pagination_frame = ttk.Frame(registros_tab); pagination_frame.pack(pady=(5,10))
+        self.btn_anterior = ttk.Button(pagination_frame, text="< Anterior", command=self.controller.go_to_previous_page, bootstyle="secondary")
+        self.btn_anterior.pack(side=LEFT, padx=5)
+        self.lbl_pagination = ttk.Label(pagination_frame, textvariable=self.pagination_var)
+        self.lbl_pagination.pack(side=LEFT, padx=5)
+        self.btn_proximo = ttk.Button(pagination_frame, text="Próximo >", command=self.controller.go_to_next_page, bootstyle="secondary")
+        self.btn_proximo.pack(side=LEFT, padx=5)
+        
+        ttk.Label(pagination_frame, text="Itens por pág:").pack(side=LEFT, padx=(20, 5))
+        self.combo_itens_por_pagina = ttk.Combobox(pagination_frame, values=[50, 100, 200, 500], state="readonly", width=5)
+        self.combo_itens_por_pagina.set(100)
+        self.combo_itens_por_pagina.pack(side=LEFT)
+        self.combo_itens_por_pagina.bind("<<ComboboxSelected>>", self.controller.change_items_per_page)
+
         ttk.Button(registros_tab, text="Excluir Lançamento Selecionado", command=self.controller.excluir_lancamento_selecionado, bootstyle=(DANGER, OUTLINE)).pack(pady=(5,10))
 
     def criar_janela_lancamento(self, titulo, centros_custo, veiculos, clientes, categorias, callback_salvar, dados_edicao=None):
         popup = ttk.Toplevel(title=titulo); popup.transient(self.root); popup.grab_set(); popup.geometry("450x600"); popup.place_window_center()
         frame = ttk.Frame(popup, padding=15); frame.pack(fill=BOTH, expand=TRUE); frame.columnconfigure(1, weight=1)
-        
         row_idx = 0
         ttk.Label(frame, text="Data:").grid(row=row_idx, column=0, sticky=W, pady=5); 
         entry_data = ttk.DateEntry(frame, dateformat='%d/%m/%Y'); entry_data.grid(row=row_idx, column=1, sticky=EW, pady=5); row_idx += 1
-        
         ttk.Label(frame, text="Tipo:").grid(row=row_idx, column=0, sticky=W, pady=5)
         combo_tipo = ttk.Combobox(frame, values=["Despesa", "Receita"], state='readonly'); combo_tipo.grid(row=row_idx, column=1, sticky=EW, pady=5); row_idx += 1
-        
         ttk.Label(frame, text="Categoria:").grid(row=row_idx, column=0, sticky=W, pady=5);
         combo_cat = ttk.Combobox(frame, values=categorias, state='readonly'); combo_cat.grid(row=row_idx, column=1, sticky=EW, pady=5); row_idx += 1
-
         ttk.Label(frame, text="Centro de Custo:").grid(row=row_idx, column=0, sticky=W, pady=5)
         combo_cc = ttk.Combobox(frame, values=centros_custo, state='readonly'); combo_cc.grid(row=row_idx, column=1, sticky=EW, pady=5); row_idx += 1
-        
         ttk.Label(frame, text="Veículo:").grid(row=row_idx, column=0, sticky=W, pady=5)
         combo_veiculo = ttk.Combobox(frame, values=veiculos, state='readonly'); combo_veiculo.grid(row=row_idx, column=1, sticky=EW, pady=5); row_idx += 1
-
         ttk.Label(frame, text="Descrição:").grid(row=row_idx, column=0, sticky=W, pady=5)
         entry_desc = ttk.Entry(frame); entry_desc.grid(row=row_idx, column=1, sticky=EW, pady=5); row_idx += 1
-
         ttk.Label(frame, text="Valor (R$):").grid(row=row_idx, column=0, sticky=W, pady=5)
         entry_valor = ttk.Entry(frame); entry_valor.grid(row=row_idx, column=1, sticky=EW, pady=5); row_idx += 1
         
@@ -172,7 +179,6 @@ class AppPrincipal:
         combo_cliente = ttk.Combobox(frame_receita, values=clientes, state='readonly'); combo_cliente.grid(row=0, column=1, sticky=EW, pady=5)
         ttk.Label(frame_receita, text="Status Pag.:").grid(row=1, column=0, sticky=W, pady=5)
         combo_status = ttk.Combobox(frame_receita, values=["Pago", "Pendente"], state='readonly'); combo_status.grid(row=1, column=1, sticky=EW, pady=5)
-
         frame_combustivel = ttk.Frame(frame); frame_combustivel.grid(row=row_idx + 1, column=0, columnspan=2, sticky='ew')
         ttk.Label(frame_combustivel, text="Litros:").grid(row=0, column=0, sticky=W, pady=5)
         entry_litros = ttk.Entry(frame_combustivel); entry_litros.grid(row=0, column=1, sticky=EW, pady=5)
@@ -252,8 +258,10 @@ class AppPrincipal:
     def get_filtros(self): return {'data_inicio': self.date_inicio.entry.get(), 'data_fim': self.date_fim.entry.get(), 'cc': self.combo_filtro_cc.get(), 'veiculo': self.combo_filtro_veiculo.get(), 'categoria': self.combo_filtro_categoria.get(), 'tipo': self.combo_filtro_tipo.get(), 'cliente': self.combo_filtro_cliente.get(), 'status': self.combo_filtro_status.get()}
     
     def resetar_campos_de_filtro(self):
-        hoje = datetime.now(); data_inicio_str = hoje.replace(day=1).strftime('%d/%m/%Y'); self.date_inicio.entry.delete(0, END); self.date_inicio.entry.insert(0, data_inicio_str)
-        data_fim_str = hoje.strftime('%d/%m/%Y'); self.date_fim.entry.delete(0, END); self.date_fim.entry.insert(0, data_fim_str)
+        hoje = datetime.now()
+        data_inicio_default = hoje - timedelta(days=365)
+        self.date_inicio.entry.delete(0, END); self.date_inicio.entry.insert(0, data_inicio_default.strftime('%d/%m/%Y'))
+        self.date_fim.entry.delete(0, END); self.date_fim.entry.insert(0, hoje.strftime('%d/%m/%Y'))
         self.combo_filtro_tipo.set("Todos"); self.combo_filtro_cc.set("Todos"); self.combo_filtro_veiculo.set("Todos"); self.combo_filtro_categoria.set("Todos"); self.combo_filtro_cliente.set("Todos"); self.combo_filtro_status.set("Todos")
         self.set_status("Filtros limpos.")
     
@@ -269,40 +277,17 @@ class AppPrincipal:
         self.combo_filtro_categoria['values'] = categorias; self.combo_filtro_categoria.set("Todos")
         
     def atualizar_treeview_lancamentos(self, dataframe):
-        for i in self.tree_relatorio.get_children():
-            self.tree_relatorio.delete(i)
-        if dataframe is None:
-            return
+        for i in self.tree_relatorio.get_children(): self.tree_relatorio.delete(i)
+        if dataframe is None: return
         for index, row in dataframe.iterrows():
-            # CORREÇÃO APLICADA AQUI
             valor_str = f"R$ {float(row.get('Valor', 0)):,.2f}"
-            
-            cliente_str = row.get("Cliente")
-            status_str = row.get("Status")
-            
-            # Se o valor for 'nan' ou vazio, exibe "N/A"
-            if pd.isna(cliente_str) or str(cliente_str).strip() == "" or str(cliente_str).strip() == "N/A":
-                 cliente_str = "N/A"
-            if pd.isna(status_str) or str(status_str).strip() == "" or str(status_str).strip() == "N/A":
-                status_str = "N/A"
-
-            # Para despesas, Cliente e Status devem sempre ser N/A
+            cliente_str = row.get("Cliente", "N/A")
+            status_str = row.get("Status", "N/A")
+            if pd.isna(cliente_str) or str(cliente_str).strip() == "": cliente_str = "N/A"
+            if pd.isna(status_str) or str(status_str).strip() == "": status_str = "N/A"
             if row.get("Tipo") == "Despesa":
-                cliente_str = "N/A"
-                status_str = "N/A"
-
-            valores_linha = (
-                row['Data'].strftime('%d/%m/%Y'),
-                row.get("Empresa", ""),
-                row.get("Centro de Custo", ""),
-                row.get("Veículo", ""),
-                row.get("Categoria", ""),
-                row.get("Descrição", ""),
-                row.get("Tipo", ""),
-                valor_str,
-                cliente_str,
-                status_str
-            )
+                cliente_str = "N/A"; status_str = "N/A"
+            valores_linha = (row['Data'].strftime('%d/%m/%Y'), row.get("Empresa", ""), row.get("Centro de Custo", ""), row.get("Veículo", ""), row.get("Categoria", ""), row.get("Descrição", ""), row.get("Tipo", ""), valor_str, cliente_str, status_str)
             self.tree_relatorio.insert("", "end", iid=index, values=valores_linha)
             
     def atualizar_resumo_financeiro(self, df):
@@ -317,3 +302,8 @@ class AppPrincipal:
     def mostrar_info(self, msg): messagebox.showinfo("Informação", msg, parent=self.root)
     def confirmar_acao(self, titulo, msg): return messagebox.askyesno(titulo, msg, parent=self.root)
     def atualizar_graficos(self, dataframe): self.graficos_tab.atualizar_todos_os_graficos(dataframe)
+    
+    def update_pagination_controls(self, current_page, total_pages):
+        self.pagination_var.set(f"Página {current_page} de {total_pages}")
+        self.btn_anterior.config(state="normal" if current_page > 1 else "disabled")
+        self.btn_proximo.config(state="normal" if current_page < total_pages else "disabled")
