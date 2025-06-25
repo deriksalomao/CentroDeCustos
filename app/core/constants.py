@@ -9,3 +9,4 @@ EMPRESAS_FILE = DATA_DIR / "empresas_data.json"
 CATEGORIAS_FILE = DATA_DIR / "categorias.json"
 RECORRENCIAS_FILE = DATA_DIR / "recorrencias.json"
 CENTRO_DE_CUSTO_FILE = DATA_DIR / "centro_de_custo.json"
+VEICULOS_FILE = os.path.join(DATA_DIR, 'veiculos.json') 

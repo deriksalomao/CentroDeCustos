@@ -1,5 +1,5 @@
 # app/core/controller.py
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import pandas as pd
 from datetime import datetime
 
@@ -20,40 +20,59 @@ class AppController:
         empresa_ativa = self.view.get_empresa_ativa()
         if not empresa_ativa: return
         
+        # Popula os filtros com os dados corretos
         centros_custo = ["Todos"] + self.model.dados_empresas.get(empresa_ativa, [])
+        veiculos_filtro = ["Todos", "N/A"] + self.model.veiculos
         categorias_filtro = ["Todos"] + self.model.categorias
-        self.view.atualizar_filtros_combobox(centros_custo, categorias_filtro)
         
+        self.view.atualizar_filtros_combobox(centros_custo, veiculos_filtro, categorias_filtro)
         self.atualizar_relatorio_e_resumo()
 
     def atualizar_relatorio_e_resumo(self):
         empresa_ativa = self.view.get_empresa_ativa()
         filtros = self.view.get_filtros()
-        
-        # A variável aqui se chama df_filtrado
         df_filtrado = self.model.get_filtered_data(empresa_ativa, filtros)
-        
-        # Atualiza a tabela e o resumo
         self.view.atualizar_treeview_lancamentos(df_filtrado)
         self.view.atualizar_resumo_financeiro(df_filtrado)
-        
-        # CORREÇÃO: Atualiza os gráficos usando o nome correto da variável (df_filtrado)
-        self.view.atualizar_graficos(df_filtrado) 
-
+        self.view.atualizar_graficos(df_filtrado)
         self.view.set_status("Relatório atualizado.")
+    
+    def exportar_para_excel(self):
+        empresa_ativa = self.view.get_empresa_ativa()
+        filtros = self.view.get_filtros()
+        df_para_exportar = self.model.get_filtered_data(empresa_ativa, filtros)
+        if df_para_exportar.empty:
+            self.view.mostrar_info("Não há dados para exportar com os filtros atuais."); return
+        try:
+            caminho_arquivo = filedialog.asksaveasfilename(title="Salvar Relatório como...", defaultextension=".xlsx", filetypes=[("Arquivos Excel", "*.xlsx"), ("Todos os arquivos", "*.*")])
+            if caminho_arquivo:
+                df_para_exportar['Data'] = pd.to_datetime(df_para_exportar['Data']).dt.strftime('%d/%m/%Y')
+                df_para_exportar.to_excel(caminho_arquivo, index=False, engine='openpyxl')
+                self.view.set_status(f"Relatório salvo com sucesso em: {caminho_arquivo}")
+                self.view.mostrar_info("Relatório exportado com sucesso!")
+        except Exception as e:
+            self.view.mostrar_info(f"Ocorreu um erro ao exportar o arquivo:\n{e}"); self.view.set_status("Erro ao exportar relatório.")
 
     def limpar_filtros(self):
-        """Orquestra a limpeza e atualização da tela."""
         self.view.resetar_campos_de_filtro()
         self.atualizar_relatorio_e_resumo()
+
+    # --- NOVAS FUNÇÕES DE CADASTRO ---
+    def adicionar_veiculo(self):
+        novo_veiculo = self.view.get_novo_veiculo().strip().upper()
+        if not novo_veiculo: return
+        if novo_veiculo in self.model.veiculos:
+            self.view.mostrar_info("Veículo já cadastrado."); return
+        
+        self.model.veiculos.append(novo_veiculo)
+        self.on_empresa_selecionada() # Atualiza os filtros
+        self.view.set_status(f"Veículo '{novo_veiculo}' adicionado.")
 
     def adicionar_empresa(self):
         nova_empresa = self.view.get_nova_empresa().strip().title()
         if not nova_empresa: return
         if nova_empresa in self.model.dados_empresas:
-            self.view.mostrar_info("Empresa já existe.")
-            return
-        
+            self.view.mostrar_info("Empresa já existe."); return
         self.model.dados_empresas[nova_empresa] = ["Geral"]
         self.view.atualizar_empresas_combobox(list(self.model.dados_empresas.keys()))
         self.view.set_empresa_ativa(nova_empresa)
@@ -65,7 +84,6 @@ class AppController:
         if not nova_cat: return
         if nova_cat in self.model.categorias:
             self.view.mostrar_info("Categoria já existe."); return
-        
         self.model.categorias.append(nova_cat)
         self.on_empresa_selecionada()
         self.view.set_status(f"Categoria '{nova_cat}' adicionada.")
@@ -76,7 +94,6 @@ class AppController:
         if not novo_cc: return
         if novo_cc in self.model.dados_empresas[empresa]:
             self.view.mostrar_info("Centro de Custo já existe."); return
-        
         self.model.dados_empresas[empresa].append(novo_cc)
         self.on_empresa_selecionada()
         self.view.set_status(f"Centro de Custo '{novo_cc}' adicionado.")
@@ -84,17 +101,18 @@ class AppController:
     def abrir_janela_novo_lancamento(self):
         empresa = self.view.get_empresa_ativa()
         centros_custo = self.model.dados_empresas.get(empresa, [])
+        veiculos = ["N/A"] + self.model.veiculos
         categorias = self.model.categorias
         self.view.criar_janela_lancamento(
             titulo="Adicionar Novo Lançamento",
             centros_custo=centros_custo,
+            veiculos=veiculos,
             categorias=categorias,
             callback_salvar=self.salvar_novo_lancamento
         )
 
     def salvar_novo_lancamento(self, dados_lancamento):
         dados_lancamento['Empresa'] = self.view.get_empresa_ativa()
-        
         success, message = self.model.adicionar_lancamento(dados_lancamento)
         if success:
             self.atualizar_relatorio_e_resumo()
@@ -103,15 +121,21 @@ class AppController:
     def abrir_janela_edicao(self, event):
         index = self.view.get_selected_lancamento_index()
         if index is None: return
-
-        dados_atuais = self.model.get_lancamento_por_indice(index)
+        dados_atuais = self.model.get_lancamento_por_indice(index).to_dict()
+        
+        # Garante que dados de lançamentos antigos tenham a chave 'Veículo'
+        if 'Veículo' not in dados_atuais:
+            dados_atuais['Veículo'] = 'N/A'
+            
         empresa = dados_atuais['Empresa']
         centros_custo = self.model.dados_empresas.get(empresa, [])
+        veiculos = ["N/A"] + self.model.veiculos
         categorias = self.model.categorias
-
+        
         self.view.criar_janela_lancamento(
             titulo="Editar Lançamento",
             centros_custo=centros_custo,
+            veiculos=veiculos,
             categorias=categorias,
             dados_edicao=dados_atuais,
             callback_salvar=lambda dados: self.salvar_edicao_lancamento(index, dados)
@@ -127,7 +151,6 @@ class AppController:
         index = self.view.get_selected_lancamento_index()
         if index is None: 
             self.view.mostrar_info("Nenhum lançamento selecionado."); return
-        
         if self.view.confirmar_acao("Confirmar Exclusão", "Deseja excluir o lançamento selecionado?"):
             success, message = self.model.excluir_lancamento(index)
             if success:
