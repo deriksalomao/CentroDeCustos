@@ -20,7 +20,6 @@ class AppController:
         empresa_ativa = self.view.get_empresa_ativa()
         if not empresa_ativa: return
         
-        # Lógica para popular os filtros da View
         centros_custo = ["Todos"] + self.model.dados_empresas.get(empresa_ativa, [])
         categorias_filtro = ["Todos"] + self.model.categorias
         self.view.atualizar_filtros_combobox(centros_custo, categorias_filtro)
@@ -30,12 +29,19 @@ class AppController:
     def atualizar_relatorio_e_resumo(self):
         empresa_ativa = self.view.get_empresa_ativa()
         filtros = self.view.get_filtros()
+        
+        # A variável aqui se chama df_filtrado
         df_filtrado = self.model.get_filtered_data(empresa_ativa, filtros)
         
+        # Atualiza a tabela e o resumo
         self.view.atualizar_treeview_lancamentos(df_filtrado)
         self.view.atualizar_resumo_financeiro(df_filtrado)
+        
+        # CORREÇÃO: Atualiza os gráficos usando o nome correto da variável (df_filtrado)
+        self.view.atualizar_graficos(df_filtrado) 
 
-    # --- NOVA FUNÇÃO ADICIONADA ---
+        self.view.set_status("Relatório atualizado.")
+
     def limpar_filtros(self):
         """Orquestra a limpeza e atualização da tela."""
         self.view.resetar_campos_de_filtro()
@@ -87,7 +93,6 @@ class AppController:
         )
 
     def salvar_novo_lancamento(self, dados_lancamento):
-        
         dados_lancamento['Empresa'] = self.view.get_empresa_ativa()
         
         success, message = self.model.adicionar_lancamento(dados_lancamento)

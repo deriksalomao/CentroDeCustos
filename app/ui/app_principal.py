@@ -6,6 +6,7 @@ from datetime import datetime
 import traceback
 import pandas as pd
 
+from .ui_graficos import GraficosFrame
 from app.core.data_manager import DataManager
 from app.core.controller import AppController
 
@@ -40,7 +41,6 @@ class AppPrincipal:
         self.total_despesas_var = ttk.StringVar(value="R$ 0.00")
         self.saldo_final_var = ttk.StringVar(value="R$ 0.00")
         self.status_var = ttk.StringVar(value="Pronto.")
-        self.margem_lucro_var = ttk.StringVar(value="0.00%")
         self.model = DataManager()
         self.controller = AppController(self.model, self)
         self.criar_widgets()
@@ -49,13 +49,11 @@ class AppPrincipal:
 
     def _setup_styles(self):
         style = ttk.Style.get_instance()
-        
         fonte_global = ("Segoe UI", 10)
-        
         style.configure('.', font=fonte_global)
         style.configure('Treeview.Heading', font=(fonte_global[0], fonte_global[1], 'bold'))
         style.configure('TLabelframe.Label', font=(fonte_global[0], fonte_global[1], 'bold'))
-        style.configure('Treeview', rowheight=35)
+        style.configure('Treeview', rowheight=28)
 
     def criar_widgets(self):
         main_container = ttk.Frame(self.root, padding=10); main_container.pack(fill=BOTH, expand=True)
@@ -85,120 +83,103 @@ class AppPrincipal:
         ttk.Button(frame_ferramentas, text="Gerar Dados de Teste", command=self.controller.gerar_dados_teste, bootstyle=(WARNING, OUTLINE)).pack(fill='x')
 
     def criar_painel_direito(self, parent):
-        filter_frame = ttk.LabelFrame(parent, text="Filtros e Registros", padding=10); filter_frame.pack(fill=BOTH, expand=True)
-        top_filter_frame = ttk.Frame(filter_frame); top_filter_frame.pack(fill=X, pady=(0,10)); top_filter_frame.columnconfigure((1,3,5), weight=1)
+        filter_frame = ttk.LabelFrame(parent, text="Filtros", padding=10)
+        filter_frame.pack(fill=X, pady=(0, 10))
+        top_filter_frame = ttk.Frame(filter_frame)
+        top_filter_frame.pack(fill=X, pady=(0,10))
+        top_filter_frame.columnconfigure((1,3,5), weight=1)
         ttk.Label(top_filter_frame, text="De:").grid(row=0, column=0, padx=(0,5), pady=5, sticky=W)
-        self.date_inicio = ttk.DateEntry(top_filter_frame, dateformat='%d/%m/%Y'); self.date_inicio.grid(row=0, column=1, sticky=EW, padx=(0,10))
+        self.date_inicio = ttk.DateEntry(top_filter_frame, dateformat='%d/%m/%Y')
+        self.date_inicio.grid(row=0, column=1, sticky=EW, padx=(0,10))
         ttk.Label(top_filter_frame, text="Até:").grid(row=0, column=2, padx=(0,5), pady=5, sticky=W)
-        self.date_fim = ttk.DateEntry(top_filter_frame, dateformat='%d/%m/%Y'); self.date_fim.grid(row=0, column=3, sticky=EW, padx=(0,10))
+        self.date_fim = ttk.DateEntry(top_filter_frame, dateformat='%d/%m/%Y')
+        self.date_fim.grid(row=0, column=3, sticky=EW, padx=(0,10))
         ttk.Label(top_filter_frame, text="Tipo:").grid(row=0, column=4, padx=(0,5), pady=5, sticky=W)
-        self.combo_filtro_tipo = ttk.Combobox(top_filter_frame, values=["Todos", "Receita", "Despesa"], state="readonly"); self.combo_filtro_tipo.grid(row=0, column=5, sticky=EW); self.combo_filtro_tipo.set("Todos")
+        self.combo_filtro_tipo = ttk.Combobox(top_filter_frame, values=["Todos", "Receita", "Despesa"], state="readonly")
+        self.combo_filtro_tipo.grid(row=0, column=5, sticky=EW)
+        self.combo_filtro_tipo.set("Todos")
         ttk.Label(top_filter_frame, text="Centro de Custo:").grid(row=1, column=0, padx=(0,5), pady=5, sticky=W)
-        self.combo_filtro_cc = ttk.Combobox(top_filter_frame, state="readonly"); self.combo_filtro_cc.grid(row=1, column=1, sticky=EW, padx=(0,10))
+        self.combo_filtro_cc = ttk.Combobox(top_filter_frame, state="readonly")
+        self.combo_filtro_cc.grid(row=1, column=1, sticky=EW, padx=(0,10))
         ttk.Label(top_filter_frame, text="Categoria:").grid(row=1, column=2, padx=(0,5), pady=5, sticky=W)
-        self.combo_filtro_categoria = ttk.Combobox(top_filter_frame, state="readonly"); self.combo_filtro_categoria.grid(row=1, column=3, columnspan=3, sticky=EW)
-        action_filter_frame = ttk.Frame(filter_frame); action_filter_frame.pack(fill=X, pady=(5,10))
+        self.combo_filtro_categoria = ttk.Combobox(top_filter_frame, state="readonly")
+        self.combo_filtro_categoria.grid(row=1, column=3, columnspan=3, sticky=EW)
+        action_filter_frame = ttk.Frame(filter_frame)
+        action_filter_frame.pack(fill=X, pady=(5,10))
         ttk.Button(action_filter_frame, text="Aplicar Filtros", command=self.controller.atualizar_relatorio_e_resumo, bootstyle="primary").pack(side=LEFT)
         ttk.Button(action_filter_frame, text="Limpar Filtros", command=self.controller.limpar_filtros, bootstyle="secondary-outline").pack(side=LEFT, padx=10)
-        tree_container = ttk.Frame(filter_frame); tree_container.pack(fill=BOTH, expand=True)
+        
+        notebook = ttk.Notebook(parent)
+        notebook.pack(fill=BOTH, expand=True)
+
+        # --- Aba de Registros ---
+        registros_tab = ttk.Frame(notebook)
+        notebook.add(registros_tab, text='Registros Detalhados')
+        
+        # --- Container para a tabela e scrollbars ---
+        tree_container = ttk.Frame(registros_tab)
+        tree_container.pack(fill=BOTH, expand=True, padx=10, pady=(10,5))
+        
         cols = ("Data", "Empresa", "Centro de Custo", "Categoria", "Descrição", "Tipo", "Valor")
-        self.tree_relatorio = ttk.Treeview(tree_container, columns=cols, show="headings", bootstyle="primary"); ys = ttk.Scrollbar(tree_container, orient=VERTICAL, command=self.tree_relatorio.yview); xs = ttk.Scrollbar(tree_container, orient=HORIZONTAL, command=self.tree_relatorio.xview)
-        self.tree_relatorio.configure(yscrollcommand=ys.set, xscrollcommand=xs.set); ys.pack(side=RIGHT, fill=Y); xs.pack(side=BOTTOM, fill=X); self.tree_relatorio.pack(side=LEFT, fill=BOTH, expand=True)
+        self.tree_relatorio = ttk.Treeview(tree_container, columns=cols, show="headings", bootstyle="primary")
+        ys = ttk.Scrollbar(tree_container, orient=VERTICAL, command=self.tree_relatorio.yview)
+        xs = ttk.Scrollbar(tree_container, orient=HORIZONTAL, command=self.tree_relatorio.xview)
+        self.tree_relatorio.configure(yscrollcommand=ys.set, xscrollcommand=xs.set)
+        
+        # Layout correto da tabela e scrollbars dentro do container
+        self.tree_relatorio.grid(row=0, column=0, sticky='nsew')
+        ys.grid(row=0, column=1, sticky='ns')
+        xs.grid(row=1, column=0, sticky='ew')
+        tree_container.grid_rowconfigure(0, weight=1)
+        tree_container.grid_columnconfigure(0, weight=1)
+        
         for col in cols: self.tree_relatorio.heading(col, text=col)
         self.tree_relatorio.bind("<Double-1>", self.controller.abrir_janela_edicao)
-        ttk.Button(filter_frame, text="Excluir Lançamento Selecionado", command=self.controller.excluir_lancamento_selecionado, bootstyle=(DANGER, OUTLINE)).pack(pady=(10,0))
+        
+        # Botão de exclusão abaixo do container da tabela
+        ttk.Button(registros_tab, text="Excluir Lançamento Selecionado", command=self.controller.excluir_lancamento_selecionado, bootstyle=(DANGER, OUTLINE)).pack(pady=(5,10))
+        
+        # --- Aba de Gráficos ---
+        self.graficos_tab = GraficosFrame(notebook)
+        notebook.add(self.graficos_tab, text='Gráficos Visuais')
 
     def criar_janela_lancamento(self, titulo, centros_custo, categorias, callback_salvar, dados_edicao=None):
-        popup = ttk.Toplevel(title=titulo)
-        popup.transient(self.root)
-        popup.grab_set()
-        popup.geometry("450x360")
-        popup.place_window_center()
-
-        frame = ttk.Frame(popup, padding=15)
-        frame.pack(fill=BOTH, expand=TRUE)
-        frame.columnconfigure(1, weight=1)
-
-        # --- Widgets ---
+        popup = ttk.Toplevel(title=titulo); popup.transient(self.root); popup.grab_set(); popup.geometry("450x360"); popup.place_window_center()
+        frame = ttk.Frame(popup, padding=15); frame.pack(fill=BOTH, expand=TRUE); frame.columnconfigure(1, weight=1)
         ttk.Label(frame, text="Data:").grid(row=0, column=0, sticky=W, pady=5)
-        entry_data = ttk.DateEntry(frame, dateformat='%d/%m/%Y')
-        entry_data.grid(row=0, column=1, sticky=EW, pady=5)
-
+        entry_data = ttk.DateEntry(frame, dateformat='%d/%m/%Y'); entry_data.grid(row=0, column=1, sticky=EW, pady=5)
         ttk.Label(frame, text="Centro de Custo:").grid(row=1, column=0, sticky=W, pady=5)
-        combo_cc = ttk.Combobox(frame, values=centros_custo, state='readonly')
-        combo_cc.grid(row=1, column=1, sticky=EW, pady=5)
-
+        combo_cc = ttk.Combobox(frame, values=centros_custo, state='readonly'); combo_cc.grid(row=1, column=1, sticky=EW, pady=5)
         ttk.Label(frame, text="Categoria:").grid(row=2, column=0, sticky=W, pady=5)
-        combo_cat = ttk.Combobox(frame, values=categorias, state='readonly')
-        combo_cat.grid(row=2, column=1, sticky=EW, pady=5)
-
+        combo_cat = ttk.Combobox(frame, values=categorias, state='readonly'); combo_cat.grid(row=2, column=1, sticky=EW, pady=5)
         ttk.Label(frame, text="Descrição:").grid(row=3, column=0, sticky=W, pady=5)
-        entry_desc = ttk.Entry(frame)
-        entry_desc.grid(row=3, column=1, sticky=EW, pady=5)
-
+        entry_desc = ttk.Entry(frame); entry_desc.grid(row=3, column=1, sticky=EW, pady=5)
         ttk.Label(frame, text="Tipo:").grid(row=4, column=0, sticky=W, pady=5)
-        combo_tipo = ttk.Combobox(frame, values=["Receita", "Despesa"], state='readonly')
-        combo_tipo.grid(row=4, column=1, sticky=EW, pady=5)
-
+        combo_tipo = ttk.Combobox(frame, values=["Receita", "Despesa"], state='readonly'); combo_tipo.grid(row=4, column=1, sticky=EW, pady=5)
         ttk.Label(frame, text="Valor (R$):").grid(row=5, column=0, sticky=W, pady=5)
-        entry_valor = ttk.Entry(frame)
-        entry_valor.grid(row=5, column=1, sticky=EW, pady=5)
-
-        # --- Lógica de preenchimento ---
+        entry_valor = ttk.Entry(frame); entry_valor.grid(row=5, column=1, sticky=EW, pady=5)
         if dados_edicao is not None:
             try:
-                # Preenche os campos com os dados do lançamento a ser editado
                 data_lancamento = dados_edicao.get('Data')
                 if data_lancamento and pd.notna(data_lancamento):
-                    # CORREÇÃO: Usar o campo 'entry' interno para definir o valor
-                    data_str = data_lancamento.strftime('%d/%m/%Y')
-                    entry_data.entry.delete(0, END)
-                    entry_data.entry.insert(0, data_str)
-                
-                combo_cc.set(dados_edicao.get('Centro de Custo', ''))
-                combo_cat.set(dados_edicao.get('Categoria', ''))
-                entry_desc.insert(0, dados_edicao.get('Descrição', ''))
-                combo_tipo.set(dados_edicao.get('Tipo', ''))
-                entry_valor.insert(0, f"{dados_edicao.get('Valor', 0.0):.2f}")
+                    data_str = data_lancamento.strftime('%d/%m/%Y'); entry_data.entry.delete(0, END); entry_data.entry.insert(0, data_str)
+                combo_cc.set(dados_edicao.get('Centro de Custo', '')); combo_cat.set(dados_edicao.get('Categoria', '')); entry_desc.insert(0, dados_edicao.get('Descrição', '')); combo_tipo.set(dados_edicao.get('Tipo', '')); entry_valor.insert(0, f"{dados_edicao.get('Valor', 0.0):.2f}")
             except Exception as e:
-                messagebox.showerror("Erro ao Carregar Dados", f"Não foi possível carregar os dados para edição.\n\nDetalhe: {e}", parent=popup)
-                traceback.print_exc()
+                messagebox.showerror("Erro ao Carregar Dados", f"Não foi possível carregar os dados para edição.\n\nDetalhe: {e}", parent=popup); traceback.print_exc()
         else:
             combo_tipo.set('Despesa')
-
-        # --- Lógica para salvar ---
         def on_save():
             try:
                 if not all([combo_cc.get(), combo_cat.get(), entry_desc.get(), combo_tipo.get(), entry_valor.get()]):
-                    messagebox.showwarning("Campos Vazios", "Todos os campos devem ser preenchidos.", parent=popup)
-                    return
-                
-                valor_float = float(entry_valor.get().replace(",", "."))
-                
-                # CORREÇÃO: Ler a data do campo 'entry' interno
-                data_str = entry_data.entry.get()
-                data_obj = datetime.strptime(data_str, '%d/%m/%Y')
-
-                dados = {
-                    'Data': data_obj,
-                    'Centro de Custo': combo_cc.get(),
-                    'Categoria': combo_cat.get(),
-                    'Descrição': entry_desc.get(),
-                    'Tipo': combo_tipo.get(),
-                    'Valor': valor_float
-                }
-                callback_salvar(dados)
-                popup.destroy()
+                    messagebox.showwarning("Campos Vazios", "Todos os campos devem ser preenchidos.", parent=popup); return
+                valor_float = float(entry_valor.get().replace(",", ".")); data_str = entry_data.entry.get(); data_obj = datetime.strptime(data_str, '%d/%m/%Y')
+                dados = {'Data': data_obj, 'Centro de Custo': combo_cc.get(), 'Categoria': combo_cat.get(), 'Descrição': entry_desc.get(), 'Tipo': combo_tipo.get(), 'Valor': valor_float}
+                callback_salvar(dados); popup.destroy()
             except ValueError:
                 messagebox.showerror("Erro de Validação", "O formato do 'Valor' é inválido.", parent=popup)
             except Exception as e:
-                messagebox.showerror("Erro ao Salvar", f"Ocorreu um erro: {e}", parent=popup)
-                traceback.print_exc()
-
-        btn_salvar = ttk.Button(frame, text="Salvar", command=on_save, bootstyle="success")
-        btn_salvar.grid(row=6, column=0, columnspan=2, pady=15, ipady=5)
-        
-        entry_desc.focus_set()
+                messagebox.showerror("Erro ao Salvar", f"Ocorreu um erro: {e}", parent=popup); traceback.print_exc()
+        btn_salvar = ttk.Button(frame, text="Salvar", command=on_save, bootstyle="success"); btn_salvar.grid(row=6, column=0, columnspan=2, pady=15, ipady=5); entry_desc.focus_set()
 
     def get_empresa_ativa(self): return self.combo_empresa_ativa.get()
     def get_nova_empresa(self): return self.entry_nova_empresa.get()
@@ -207,25 +188,11 @@ class AppPrincipal:
     def get_selected_lancamento_index(self):
         focus = self.tree_relatorio.focus()
         return int(focus) if focus else None
-    def get_filtros(self):
-        return {'data_inicio': self.date_inicio.entry.get(), 'data_fim': self.date_fim.entry.get(), 'cc': self.combo_filtro_cc.get(), 'categoria': self.combo_filtro_categoria.get(), 'tipo': self.combo_filtro_tipo.get()}
-
+    def get_filtros(self): return {'data_inicio': self.date_inicio.entry.get(), 'data_fim': self.date_fim.entry.get(), 'cc': self.combo_filtro_cc.get(), 'categoria': self.combo_filtro_categoria.get(), 'tipo': self.combo_filtro_tipo.get()}
     def resetar_campos_de_filtro(self):
-        hoje = datetime.now()
-        # CORREÇÃO: Usar o campo 'entry' interno para definir o valor para consistência
-        data_inicio_str = hoje.replace(day=1).strftime('%d/%m/%Y')
-        self.date_inicio.entry.delete(0, END)
-        self.date_inicio.entry.insert(0, data_inicio_str)
-
-        data_fim_str = hoje.strftime('%d/%m/%Y')
-        self.date_fim.entry.delete(0, END)
-        self.date_fim.entry.insert(0, data_fim_str)
-        
-        self.combo_filtro_tipo.set("Todos")
-        self.combo_filtro_cc.set("Todos")
-        self.combo_filtro_categoria.set("Todos")
-        self.set_status("Filtros limpos.")
-        
+        hoje = datetime.now(); data_inicio_str = hoje.replace(day=1).strftime('%d/%m/%Y'); self.date_inicio.entry.delete(0, END); self.date_inicio.entry.insert(0, data_inicio_str)
+        data_fim_str = hoje.strftime('%d/%m/%Y'); self.date_fim.entry.delete(0, END); self.date_fim.entry.insert(0, data_fim_str)
+        self.combo_filtro_tipo.set("Todos"); self.combo_filtro_cc.set("Todos"); self.combo_filtro_categoria.set("Todos"); self.set_status("Filtros limpos.")
     def set_status(self, message): self.status_var.set(message)
     def destruir(self): self.root.destroy()
     def atualizar_empresas_combobox(self, empresas): self.combo_empresa_ativa['values'] = empresas
@@ -237,19 +204,16 @@ class AppPrincipal:
         for i in self.tree_relatorio.get_children(): self.tree_relatorio.delete(i)
         if dataframe is None: return
         for index, row in dataframe.iterrows():
-            data_str = row['Data'].strftime('%d/%m/%Y')
-            valor_str = f"R$ {float(row['Valor']):,.2f}"
+            data_str = row['Data'].strftime('%d/%m/%Y'); valor_str = f"R$ {float(row['Valor']):,.2f}"
             self.tree_relatorio.insert("", "end", iid=index, values=(data_str, row["Empresa"], row["Centro de Custo"], row["Categoria"], row["Descrição"], row["Tipo"], valor_str))
     def atualizar_resumo_financeiro(self, df):
         if df.empty: total_receitas, total_despesas, saldo = 0, 0, 0
         else:
-            total_receitas = df[df['Tipo'] == 'Receita']['Valor'].sum()
-            total_despesas = df[df['Tipo'] == 'Despesa']['Valor'].sum()
-            saldo = total_receitas - total_despesas
-        self.total_receitas_var.set(f"R$ {total_receitas:,.2f}"); self.total_despesas_var.set(f"R$ {total_despesas:,.2f}")
-        self.saldo_final_var.set(f"R$ {saldo:,.2f}")
+            total_receitas = df[df['Tipo'] == 'Receita']['Valor'].sum(); total_despesas = df[df['Tipo'] == 'Despesa']['Valor'].sum(); saldo = total_receitas - total_despesas
+        self.total_receitas_var.set(f"R$ {total_receitas:,.2f}"); self.total_despesas_var.set(f"R$ {total_despesas:,.2f}"); self.saldo_final_var.set(f"R$ {saldo:,.2f}")
         if saldo > 0: self.label_saldo.config(bootstyle="success")
         elif saldo < 0: self.label_saldo.config(bootstyle="danger")
         else: self.label_saldo.config(bootstyle="default")
     def mostrar_info(self, msg): messagebox.showinfo("Informação", msg, parent=self.root)
     def confirmar_acao(self, titulo, msg): return messagebox.askyesno(titulo, msg, parent=self.root)
+    def atualizar_graficos(self, dataframe): self.graficos_tab.atualizar_grafico_despesas(dataframe)
