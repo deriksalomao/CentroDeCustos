@@ -8,7 +8,8 @@ from .constants import LANCAMENTOS_FILE, EMPRESAS_FILE, CATEGORIAS_FILE, CONFIG_
 
 class DataManager:
     def __init__(self):
-        self.colunas = ["Data", "Empresa", "Centro de Custo", "Veículo", "Categoria", "Descrição", "Tipo", "Valor", "Cliente", "Status"]
+        # ADICIONAMOS as colunas de abastecimento
+        self.colunas = ["Data", "Empresa", "Centro de Custo", "Veículo", "Categoria", "Descrição", "Tipo", "Valor", "Cliente", "Status", "Litros", "Preco_Litro", "KM_Odometro"]
         
         self.df_lancamentos = pd.DataFrame(columns=self.colunas)
         self.dados_empresas = {}
@@ -21,11 +22,13 @@ class DataManager:
     def load_all_data(self):
         if os.path.exists(LANCAMENTOS_FILE) and os.path.getsize(LANCAMENTOS_FILE) > 0:
             df = pd.read_csv(LANCAMENTOS_FILE, parse_dates=["Data"])
-            if 'Veículo' not in df.columns: df['Veículo'] = 'N/A'
-            if 'Cliente' not in df.columns: df['Cliente'] = 'N/A'
-            if 'Status' not in df.columns: df['Status'] = 'N/A'
+            # Adiciona colunas novas se não existirem nos dados antigos, para compatibilidade
+            for col in ['Veículo', 'Cliente', 'Status', 'Litros', 'Preco_Litro', 'KM_Odometro']:
+                if col not in df.columns:
+                    df[col] = 'N/A'
             self.df_lancamentos = df
         
+        # Carregamento dos outros arquivos (empresas, categorias, etc.)
         try:
             with open(EMPRESAS_FILE, 'r', encoding='utf-8') as f: self.dados_empresas = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError): self.dados_empresas = {"Sua Transportadora": ["Administrativo", "Operacional"]}
@@ -51,8 +54,10 @@ class DataManager:
 
     def adicionar_lancamento(self, dados):
         try:
-            dados.setdefault('Cliente', 'N/A')
-            dados.setdefault('Status', 'N/A')
+            # Garante que as novas colunas existam no dicionário
+            for col in ['Cliente', 'Status', 'Litros', 'Preco_Litro', 'KM_Odometro']:
+                dados.setdefault(col, 'N/A')
+            
             novo_lanc_df = pd.DataFrame([dados])
             novo_lanc_df['Data'] = pd.to_datetime(novo_lanc_df['Data'])
             novo_lanc_df['Valor'] = pd.to_numeric(novo_lanc_df['Valor'])
@@ -105,13 +110,11 @@ class DataManager:
         return df.sort_values(by="Data", ascending=False)
         
     def gerar_dados_teste(self):
-        # Esta função foi otimizada para remover o FutureWarning
         num_lancamentos = 150
         empresas = list(self.dados_empresas.keys())
         dados_teste = []
         start_date = datetime.now() - timedelta(days=365)
         
-        # Garante que há dados para gerar testes
         if not all([empresas, self.categorias, self.veiculos, self.clientes]):
              return False, "É necessário cadastrar ao menos uma Empresa, Categoria, Veículo e Cliente para gerar dados de teste."
 
@@ -122,7 +125,7 @@ class DataManager:
             categoria = random.choice(self.categorias)
             tipo = random.choice(['Receita', 'Despesa'])
             data = start_date + timedelta(days=random.randint(0, 365), hours=random.randint(0, 23), minutes=random.randint(0, 59))
-            cliente, status = 'N/A', 'N/A'
+            cliente, status, litros, preco_litro, km = 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'
             
             if tipo == 'Receita':
                 descricao = f"Frete #{random.randint(100, 999)}"
@@ -130,12 +133,17 @@ class DataManager:
                 cliente = random.choice(self.clientes)
                 status = random.choice(['Pago', 'Pendente'])
             else:
-                descricao = f"Abastecimento Posto Y"
-                valor = round(random.uniform(500, 2500), 2)
+                descricao = f"Despesa Geral"
+                valor = round(random.uniform(50, 500), 2)
+                if categoria == "Combustível":
+                    descricao = "Abastecimento"
+                    litros = round(random.uniform(30, 100), 2)
+                    preco_litro = round(random.uniform(5.0, 6.5), 2)
+                    valor = round(litros * preco_litro, 2)
+                    km = random.randint(100000, 500000)
 
-            dados_teste.append([data, empresa, centro_custo, veiculo, categoria, descricao, tipo, valor, cliente, status])
+            dados_teste.append([data, empresa, centro_custo, veiculo, categoria, descricao, tipo, valor, cliente, status, litros, preco_litro, km])
             
         self.df_lancamentos = pd.DataFrame(dados_teste, columns=self.colunas)
-        
         self.save_all_data()
         return True, "Dados de teste gerados com sucesso."

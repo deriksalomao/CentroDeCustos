@@ -57,14 +57,13 @@ class AppController:
         self.view.resetar_campos_de_filtro()
         self.atualizar_relatorio_e_resumo()
 
-    # --- FUNÇÕES DE CADASTRO ---
     def adicionar_cliente(self):
         novo_cliente = self.view.get_novo_cliente().strip().title()
         if not novo_cliente: return
         if novo_cliente in self.model.clientes:
             self.view.mostrar_info("Cliente já cadastrado."); return
         self.model.clientes.append(novo_cliente)
-        self.on_empresa_selecionada() # Atualiza os filtros
+        self.on_empresa_selecionada()
         self.view.set_status(f"Cliente '{novo_cliente}' adicionado.")
 
     def adicionar_veiculo(self):
@@ -171,6 +170,9 @@ class AppController:
             if success:
                 self.iniciar_app()
                 self.view.set_status(message)
+            else:
+                self.view.mostrar_info(f"Erro ao gerar dados: {message}")
+
 
     def ao_fechar(self):
         config = {'last_company': self.view.get_empresa_ativa()}

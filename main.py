@@ -7,7 +7,6 @@ def main():
     root = ttk.Window(themename="cosmo") 
     
     root.withdraw()
-
     def iniciar_app_principal():
         login_toplevel.destroy()
         AppPrincipal(root)

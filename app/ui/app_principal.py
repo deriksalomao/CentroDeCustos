@@ -100,7 +100,6 @@ class AppPrincipal:
         ttk.Label(top_filter_frame, text="Até:").grid(row=0, column=2, padx=(0,5), pady=5, sticky=W)
         self.date_fim = ttk.DateEntry(top_filter_frame, dateformat='%d/%m/%Y'); self.date_fim.grid(row=0, column=3, sticky=EW, padx=(0,10))
         
-        # Filtros de Centro de Custo e Veículo
         ttk.Label(top_filter_frame, text="Centro de Custo:").grid(row=1, column=0, padx=(0,5), pady=5, sticky=W)
         self.combo_filtro_cc = ttk.Combobox(top_filter_frame, state="readonly"); self.combo_filtro_cc.grid(row=1, column=1, sticky=EW, padx=(0,10))
         ttk.Label(top_filter_frame, text="Veículo:").grid(row=1, column=2, padx=(0,5), pady=5, sticky=W)
@@ -111,7 +110,6 @@ class AppPrincipal:
         ttk.Label(top_filter_frame, text="Tipo:").grid(row=2, column=2, padx=(0,5), pady=5, sticky=W)
         self.combo_filtro_tipo = ttk.Combobox(top_filter_frame, values=["Todos", "Receita", "Despesa"], state="readonly"); self.combo_filtro_tipo.grid(row=2, column=3, sticky=EW, padx=(0,10)); self.combo_filtro_tipo.set("Todos")
         
-        # Filtros de Cliente e Status
         ttk.Label(top_filter_frame, text="Cliente:").grid(row=3, column=0, padx=(0,5), pady=5, sticky=W)
         self.combo_filtro_cliente = ttk.Combobox(top_filter_frame, state="readonly"); self.combo_filtro_cliente.grid(row=3, column=1, sticky=EW, padx=(0,10))
         ttk.Label(top_filter_frame, text="Status Pag.:").grid(row=3, column=2, padx=(0,5), pady=5, sticky=W)
@@ -122,7 +120,7 @@ class AppPrincipal:
         ttk.Button(action_filter_frame, text="Limpar Filtros", command=self.controller.limpar_filtros, bootstyle="secondary-outline").pack(side=LEFT, padx=10)
         ttk.Button(action_filter_frame, text="Exportar para Excel", command=self.controller.exportar_para_excel, bootstyle="info").pack(side=LEFT)
         notebook = ttk.Notebook(parent); notebook.pack(fill=BOTH, expand=True)
-        registros_tab = ttk.Frame(notebook); notebook.add(registros_tab, text='Registros Detalhados')
+        registros_tab = ttk.Frame(notebook); notebook.add(registros_tab, text='Registos Detalhados')
         self.graficos_tab = GraficosFrame(notebook); notebook.add(self.graficos_tab, text='Gráficos Visuais')
         
         tree_container = ttk.Frame(registros_tab); tree_container.pack(fill=BOTH, expand=True, padx=10, pady=(10,5))
@@ -132,13 +130,19 @@ class AppPrincipal:
         self.tree_relatorio.configure(yscrollcommand=ys.set, xscrollcommand=xs.set)
         self.tree_relatorio.grid(row=0, column=0, sticky='nsew'); ys.grid(row=0, column=1, sticky='ns'); xs.grid(row=1, column=0, sticky='ew')
         tree_container.grid_rowconfigure(0, weight=1); tree_container.grid_columnconfigure(0, weight=1)
+        
         for col in cols: self.tree_relatorio.heading(col, text=col)
+        self.tree_relatorio.column("Valor", anchor="e", width=120)
+        self.tree_relatorio.column("Data", anchor="center", width=90)
+        self.tree_relatorio.column("Tipo", anchor="center", width=80)
+        self.tree_relatorio.column("Status", anchor="center", width=80)
+
         self.tree_relatorio.bind("<Double-1>", self.controller.abrir_janela_edicao)
         
         ttk.Button(registros_tab, text="Excluir Lançamento Selecionado", command=self.controller.excluir_lancamento_selecionado, bootstyle=(DANGER, OUTLINE)).pack(pady=(5,10))
 
     def criar_janela_lancamento(self, titulo, centros_custo, veiculos, clientes, categorias, callback_salvar, dados_edicao=None):
-        popup = ttk.Toplevel(title=titulo); popup.transient(self.root); popup.grab_set(); popup.geometry("450x480"); popup.place_window_center()
+        popup = ttk.Toplevel(title=titulo); popup.transient(self.root); popup.grab_set(); popup.geometry("450x600"); popup.place_window_center()
         frame = ttk.Frame(popup, padding=15); frame.pack(fill=BOTH, expand=TRUE); frame.columnconfigure(1, weight=1)
         
         row_idx = 0
@@ -163,26 +167,29 @@ class AppPrincipal:
         ttk.Label(frame, text="Valor (R$):").grid(row=row_idx, column=0, sticky=W, pady=5)
         entry_valor = ttk.Entry(frame); entry_valor.grid(row=row_idx, column=1, sticky=EW, pady=5); row_idx += 1
         
-        # --- Campos que aparecem apenas para Receitas (Fretes) ---
-        label_cliente = ttk.Label(frame, text="Cliente:")
-        combo_cliente = ttk.Combobox(frame, values=clientes, state='readonly')
-        label_status = ttk.Label(frame, text="Status Pag.:")
-        combo_status = ttk.Combobox(frame, values=["Pago", "Pendente"], state='readonly')
+        frame_receita = ttk.Frame(frame); frame_receita.grid(row=row_idx, column=0, columnspan=2, sticky='ew')
+        ttk.Label(frame_receita, text="Cliente:").grid(row=0, column=0, sticky=W, pady=5)
+        combo_cliente = ttk.Combobox(frame_receita, values=clientes, state='readonly'); combo_cliente.grid(row=0, column=1, sticky=EW, pady=5)
+        ttk.Label(frame_receita, text="Status Pag.:").grid(row=1, column=0, sticky=W, pady=5)
+        combo_status = ttk.Combobox(frame_receita, values=["Pago", "Pendente"], state='readonly'); combo_status.grid(row=1, column=1, sticky=EW, pady=5)
 
-        def toggle_frete_fields(event=None):
-            nonlocal row_idx
-            if combo_tipo.get() == "Receita":
-                label_cliente.grid(row=row_idx, column=0, sticky=W, pady=5)
-                combo_cliente.grid(row=row_idx, column=1, sticky=EW, pady=5)
-                label_status.grid(row=row_idx+1, column=0, sticky=W, pady=5)
-                combo_status.grid(row=row_idx+1, column=1, sticky=EW, pady=5)
-            else:
-                label_cliente.grid_remove()
-                combo_cliente.grid_remove()
-                label_status.grid_remove()
-                combo_status.grid_remove()
+        frame_combustivel = ttk.Frame(frame); frame_combustivel.grid(row=row_idx + 1, column=0, columnspan=2, sticky='ew')
+        ttk.Label(frame_combustivel, text="Litros:").grid(row=0, column=0, sticky=W, pady=5)
+        entry_litros = ttk.Entry(frame_combustivel); entry_litros.grid(row=0, column=1, sticky=EW, pady=5)
+        ttk.Label(frame_combustivel, text="Preço/Litro:").grid(row=1, column=0, sticky=W, pady=5)
+        entry_preco_litro = ttk.Entry(frame_combustivel); entry_preco_litro.grid(row=1, column=1, sticky=EW, pady=5)
+        ttk.Label(frame_combustivel, text="Odómetro (KM):").grid(row=2, column=0, sticky=W, pady=5)
+        entry_odometro = ttk.Entry(frame_combustivel); entry_odometro.grid(row=2, column=1, sticky=EW, pady=5)
 
-        combo_tipo.bind("<<ComboboxSelected>>", toggle_frete_fields)
+        def toggle_fields(event=None):
+            tipo = combo_tipo.get(); categoria = combo_cat.get()
+            if tipo == "Receita": frame_receita.grid()
+            else: frame_receita.grid_remove()
+            if categoria == "Combustível": frame_combustivel.grid()
+            else: frame_combustivel.grid_remove()
+
+        combo_tipo.bind("<<ComboboxSelected>>", toggle_fields)
+        combo_cat.bind("<<ComboboxSelected>>", toggle_fields)
 
         if dados_edicao is not None:
             try:
@@ -197,12 +204,14 @@ class AppPrincipal:
                 entry_valor.insert(0, f"{dados_edicao.get('Valor', 0.0):.2f}")
                 combo_cliente.set(dados_edicao.get('Cliente', ''))
                 combo_status.set(dados_edicao.get('Status', ''))
-                toggle_frete_fields() # Mostra/esconde os campos com base no tipo
+                entry_litros.insert(0, str(dados_edicao.get('Litros', '')))
+                entry_preco_litro.insert(0, str(dados_edicao.get('Preco_Litro', '')))
+                entry_odometro.insert(0, str(dados_edicao.get('KM_Odometro', '')))
+                toggle_fields()
             except Exception as e:
                 messagebox.showerror("Erro ao Carregar Dados", f"Não foi possível carregar os dados para edição.\n\nDetalhe: {e}", parent=popup); traceback.print_exc()
         else:
-            combo_tipo.set('Despesa')
-            combo_veiculo.set('N/A')
+            combo_tipo.set('Despesa'); combo_veiculo.set('N/A'); toggle_fields()
         
         def on_save():
             try:
@@ -215,19 +224,20 @@ class AppPrincipal:
                 if combo_tipo.get() == "Receita":
                     if not combo_cliente.get() or not combo_status.get():
                         messagebox.showwarning("Campos de Receita", "Para receitas, Cliente e Status são obrigatórios.", parent=popup); return
-                    dados['Cliente'] = combo_cliente.get()
-                    dados['Status'] = combo_status.get()
-                else:
-                    dados['Cliente'] = 'N/A'
-                    dados['Status'] = 'N/A'
+                    dados['Cliente'] = combo_cliente.get(); dados['Status'] = combo_status.get()
+                
+                if combo_cat.get() == "Combustível":
+                    dados['Litros'] = float(entry_litros.get() or 0)
+                    dados['Preco_Litro'] = float(entry_preco_litro.get() or 0)
+                    dados['KM_Odometro'] = int(entry_odometro.get() or 0)
 
                 callback_salvar(dados); popup.destroy()
-            except ValueError:
-                messagebox.showerror("Erro de Validação", "O formato do 'Valor' é inválido.", parent=popup)
+            except (ValueError, TypeError):
+                messagebox.showerror("Erro de Validação", "Verifique se os valores numéricos (Valor, Litros, etc.) estão corretos.", parent=popup)
             except Exception as e:
                 messagebox.showerror("Erro ao Salvar", f"Ocorreu um erro: {e}", parent=popup); traceback.print_exc()
         
-        btn_salvar = ttk.Button(frame, text="Salvar", command=on_save, bootstyle="success"); btn_salvar.grid(row=row_idx+2, column=0, columnspan=2, pady=15, ipady=5); entry_desc.focus_set()
+        btn_salvar = ttk.Button(frame, text="Salvar", command=on_save, bootstyle="success"); btn_salvar.grid(row=10, column=0, columnspan=2, pady=15, ipady=5); entry_desc.focus_set()
 
     def get_empresa_ativa(self): return self.combo_empresa_ativa.get()
     def get_nova_empresa(self): return self.entry_nova_empresa.get()
@@ -259,11 +269,41 @@ class AppPrincipal:
         self.combo_filtro_categoria['values'] = categorias; self.combo_filtro_categoria.set("Todos")
         
     def atualizar_treeview_lancamentos(self, dataframe):
-        for i in self.tree_relatorio.get_children(): self.tree_relatorio.delete(i)
-        if dataframe is None: return
+        for i in self.tree_relatorio.get_children():
+            self.tree_relatorio.delete(i)
+        if dataframe is None:
+            return
         for index, row in dataframe.iterrows():
-            data_str = row['Data'].strftime('%d/%m/%Y'); valor_str = f"R$ {float(row['Valor']):,.2f}"
-            self.tree_relatorio.insert("", "end", iid=index, values=(data_str, row["Empresa"], row["Centro de Custo"], row["Veículo"], row["Categoria"], row["Descrição"], row["Tipo"], valor_str, row["Cliente"], row["Status"]))
+            # CORREÇÃO APLICADA AQUI
+            valor_str = f"R$ {float(row.get('Valor', 0)):,.2f}"
+            
+            cliente_str = row.get("Cliente")
+            status_str = row.get("Status")
+            
+            # Se o valor for 'nan' ou vazio, exibe "N/A"
+            if pd.isna(cliente_str) or str(cliente_str).strip() == "" or str(cliente_str).strip() == "N/A":
+                 cliente_str = "N/A"
+            if pd.isna(status_str) or str(status_str).strip() == "" or str(status_str).strip() == "N/A":
+                status_str = "N/A"
+
+            # Para despesas, Cliente e Status devem sempre ser N/A
+            if row.get("Tipo") == "Despesa":
+                cliente_str = "N/A"
+                status_str = "N/A"
+
+            valores_linha = (
+                row['Data'].strftime('%d/%m/%Y'),
+                row.get("Empresa", ""),
+                row.get("Centro de Custo", ""),
+                row.get("Veículo", ""),
+                row.get("Categoria", ""),
+                row.get("Descrição", ""),
+                row.get("Tipo", ""),
+                valor_str,
+                cliente_str,
+                status_str
+            )
+            self.tree_relatorio.insert("", "end", iid=index, values=valores_linha)
             
     def atualizar_resumo_financeiro(self, df):
         if df.empty: total_receitas, total_despesas, saldo = 0, 0, 0
