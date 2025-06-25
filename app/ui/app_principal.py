@@ -1,9 +1,10 @@
 # app/ui/app_principal.py
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
-from tkinter import messagebox
+from tkinter import messagebox, END
 from datetime import datetime
 import traceback
+import pandas as pd
 
 from app.core.data_manager import DataManager
 from app.core.controller import AppController
@@ -49,10 +50,7 @@ class AppPrincipal:
     def _setup_styles(self):
         style = ttk.Style.get_instance()
         
-        # --- ALTERAÇÃO DEFINITIVA AQUI ---
-        # Trocando para uma fonte mais compatível e segura com o tema.
         fonte_global = ("Segoe UI", 10)
-        # ---------------------------------
         
         style.configure('.', font=fonte_global)
         style.configure('Treeview.Heading', font=(fonte_global[0], fonte_global[1], 'bold'))
@@ -111,37 +109,96 @@ class AppPrincipal:
         ttk.Button(filter_frame, text="Excluir Lançamento Selecionado", command=self.controller.excluir_lancamento_selecionado, bootstyle=(DANGER, OUTLINE)).pack(pady=(10,0))
 
     def criar_janela_lancamento(self, titulo, centros_custo, categorias, callback_salvar, dados_edicao=None):
-        popup = ttk.Toplevel(title=titulo); popup.transient(self.root); popup.grab_set()
-        popup.geometry("450x300"); popup.place_window_center()
-        frame = ttk.Frame(popup, padding=15); frame.pack(fill=BOTH, expand=TRUE); frame.columnconfigure(1, weight=1)
-        ttk.Label(frame, text="Centro de Custo:").grid(row=0, column=0, sticky=W, pady=5)
-        combo_cc = ttk.Combobox(frame, values=centros_custo, state='readonly'); combo_cc.grid(row=0, column=1, sticky=EW, pady=5)
-        ttk.Label(frame, text="Categoria:").grid(row=1, column=0, sticky=W, pady=5)
-        combo_cat = ttk.Combobox(frame, values=categorias, state='readonly'); combo_cat.grid(row=1, column=1, sticky=EW, pady=5)
-        ttk.Label(frame, text="Descrição:").grid(row=2, column=0, sticky=W, pady=5)
-        entry_desc = ttk.Entry(frame); entry_desc.grid(row=2, column=1, sticky=EW, pady=5)
-        ttk.Label(frame, text="Tipo:").grid(row=3, column=0, sticky=W, pady=5)
-        combo_tipo = ttk.Combobox(frame, values=["Receita", "Despesa"], state='readonly'); combo_tipo.grid(row=3, column=1, sticky=EW, pady=5)
-        ttk.Label(frame, text="Valor (R$):").grid(row=4, column=0, sticky=W, pady=5)
-        entry_valor = ttk.Entry(frame); entry_valor.grid(row=4, column=1, sticky=EW, pady=5)
+        popup = ttk.Toplevel(title=titulo)
+        popup.transient(self.root)
+        popup.grab_set()
+        popup.geometry("450x360")
+        popup.place_window_center()
+
+        frame = ttk.Frame(popup, padding=15)
+        frame.pack(fill=BOTH, expand=TRUE)
+        frame.columnconfigure(1, weight=1)
+
+        # --- Widgets ---
+        ttk.Label(frame, text="Data:").grid(row=0, column=0, sticky=W, pady=5)
+        entry_data = ttk.DateEntry(frame, dateformat='%d/%m/%Y')
+        entry_data.grid(row=0, column=1, sticky=EW, pady=5)
+
+        ttk.Label(frame, text="Centro de Custo:").grid(row=1, column=0, sticky=W, pady=5)
+        combo_cc = ttk.Combobox(frame, values=centros_custo, state='readonly')
+        combo_cc.grid(row=1, column=1, sticky=EW, pady=5)
+
+        ttk.Label(frame, text="Categoria:").grid(row=2, column=0, sticky=W, pady=5)
+        combo_cat = ttk.Combobox(frame, values=categorias, state='readonly')
+        combo_cat.grid(row=2, column=1, sticky=EW, pady=5)
+
+        ttk.Label(frame, text="Descrição:").grid(row=3, column=0, sticky=W, pady=5)
+        entry_desc = ttk.Entry(frame)
+        entry_desc.grid(row=3, column=1, sticky=EW, pady=5)
+
+        ttk.Label(frame, text="Tipo:").grid(row=4, column=0, sticky=W, pady=5)
+        combo_tipo = ttk.Combobox(frame, values=["Receita", "Despesa"], state='readonly')
+        combo_tipo.grid(row=4, column=1, sticky=EW, pady=5)
+
+        ttk.Label(frame, text="Valor (R$):").grid(row=5, column=0, sticky=W, pady=5)
+        entry_valor = ttk.Entry(frame)
+        entry_valor.grid(row=5, column=1, sticky=EW, pady=5)
+
+        # --- Lógica de preenchimento ---
         if dados_edicao is not None:
-            combo_cc.set(dados_edicao.get('Centro de Custo', '')); combo_cat.set(dados_edicao.get('Categoria', '')); entry_desc.insert(0, dados_edicao.get('Descrição', ''))
-            combo_tipo.set(dados_edicao.get('Tipo', 'Despesa')); entry_valor.insert(0, f"{dados_edicao.get('Valor', 0.0):.2f}")
+            try:
+                # Preenche os campos com os dados do lançamento a ser editado
+                data_lancamento = dados_edicao.get('Data')
+                if data_lancamento and pd.notna(data_lancamento):
+                    # CORREÇÃO: Usar o campo 'entry' interno para definir o valor
+                    data_str = data_lancamento.strftime('%d/%m/%Y')
+                    entry_data.entry.delete(0, END)
+                    entry_data.entry.insert(0, data_str)
+                
+                combo_cc.set(dados_edicao.get('Centro de Custo', ''))
+                combo_cat.set(dados_edicao.get('Categoria', ''))
+                entry_desc.insert(0, dados_edicao.get('Descrição', ''))
+                combo_tipo.set(dados_edicao.get('Tipo', ''))
+                entry_valor.insert(0, f"{dados_edicao.get('Valor', 0.0):.2f}")
+            except Exception as e:
+                messagebox.showerror("Erro ao Carregar Dados", f"Não foi possível carregar os dados para edição.\n\nDetalhe: {e}", parent=popup)
+                traceback.print_exc()
         else:
             combo_tipo.set('Despesa')
+
+        # --- Lógica para salvar ---
         def on_save():
             try:
+                if not all([combo_cc.get(), combo_cat.get(), entry_desc.get(), combo_tipo.get(), entry_valor.get()]):
+                    messagebox.showwarning("Campos Vazios", "Todos os campos devem ser preenchidos.", parent=popup)
+                    return
+                
                 valor_float = float(entry_valor.get().replace(",", "."))
-                dados = {'Centro de Custo': combo_cc.get(), 'Categoria': combo_cat.get(), 'Descrição': entry_desc.get(), 'Tipo': combo_tipo.get(), 'Valor': valor_float}
-                try:
-                    callback_salvar(dados); popup.destroy()
-                except Exception as e:
-                    messagebox.showerror("Erro Interno ao Salvar", f"Não foi possível salvar.\n\nDetalhe: {e}", parent=popup)
-                    traceback.print_exc()
+                
+                # CORREÇÃO: Ler a data do campo 'entry' interno
+                data_str = entry_data.entry.get()
+                data_obj = datetime.strptime(data_str, '%d/%m/%Y')
+
+                dados = {
+                    'Data': data_obj,
+                    'Centro de Custo': combo_cc.get(),
+                    'Categoria': combo_cat.get(),
+                    'Descrição': entry_desc.get(),
+                    'Tipo': combo_tipo.get(),
+                    'Valor': valor_float
+                }
+                callback_salvar(dados)
+                popup.destroy()
             except ValueError:
-                messagebox.showerror("Erro de Validação", "O valor do lançamento é inválido.", parent=popup)
+                messagebox.showerror("Erro de Validação", "O formato do 'Valor' é inválido.", parent=popup)
+            except Exception as e:
+                messagebox.showerror("Erro ao Salvar", f"Ocorreu um erro: {e}", parent=popup)
+                traceback.print_exc()
+
         btn_salvar = ttk.Button(frame, text="Salvar", command=on_save, bootstyle="success")
-        btn_salvar.grid(row=5, column=0, columnspan=2, pady=15, ipady=5); entry_desc.focus_set()
+        btn_salvar.grid(row=6, column=0, columnspan=2, pady=15, ipady=5)
+        
+        entry_desc.focus_set()
 
     def get_empresa_ativa(self): return self.combo_empresa_ativa.get()
     def get_nova_empresa(self): return self.entry_nova_empresa.get()
@@ -152,10 +209,23 @@ class AppPrincipal:
         return int(focus) if focus else None
     def get_filtros(self):
         return {'data_inicio': self.date_inicio.entry.get(), 'data_fim': self.date_fim.entry.get(), 'cc': self.combo_filtro_cc.get(), 'categoria': self.combo_filtro_categoria.get(), 'tipo': self.combo_filtro_tipo.get()}
+
     def resetar_campos_de_filtro(self):
-        hoje = datetime.now(); self.date_inicio.set_date(hoje.replace(day=1)); self.date_fim.set_date(hoje)
-        self.combo_filtro_tipo.set("Todos"); self.combo_filtro_cc.set("Todos"); self.combo_filtro_categoria.set("Todos")
+        hoje = datetime.now()
+        # CORREÇÃO: Usar o campo 'entry' interno para definir o valor para consistência
+        data_inicio_str = hoje.replace(day=1).strftime('%d/%m/%Y')
+        self.date_inicio.entry.delete(0, END)
+        self.date_inicio.entry.insert(0, data_inicio_str)
+
+        data_fim_str = hoje.strftime('%d/%m/%Y')
+        self.date_fim.entry.delete(0, END)
+        self.date_fim.entry.insert(0, data_fim_str)
+        
+        self.combo_filtro_tipo.set("Todos")
+        self.combo_filtro_cc.set("Todos")
+        self.combo_filtro_categoria.set("Todos")
         self.set_status("Filtros limpos.")
+        
     def set_status(self, message): self.status_var.set(message)
     def destruir(self): self.root.destroy()
     def atualizar_empresas_combobox(self, empresas): self.combo_empresa_ativa['values'] = empresas

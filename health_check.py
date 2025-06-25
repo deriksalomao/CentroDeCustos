@@ -1,9 +1,7 @@
-# health_check.py
 import sys
 import os
 import pandas as pd
 
-# Adiciona o diretório do projeto ao path do Python para encontrar os módulos da 'app'
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 try:
@@ -14,7 +12,6 @@ except ImportError as e:
     print("Verifique se a estrutura de pastas está correta e se você está executando o script da pasta raiz do projeto.")
     sys.exit(1)
 
-# Classe para cores no terminal
 class BColors:
     OKGREEN = '\033[92m'
     FAIL = '\033[91m'
@@ -40,8 +37,6 @@ def run_test(title, test_function):
         traceback.print_exc()
         return False
 
-# --- DEFINIÇÃO DOS TESTES ---
-
 def test_file_existence():
     """Verifica se os arquivos de dados essenciais existem."""
     files_to_check = [LANCAMENTOS_FILE, EMPRESAS_FILE, CATEGORIAS_FILE]
@@ -64,7 +59,6 @@ def test_dataframe_integrity():
     dm = DataManager()
     df = dm.df_lancamentos
     
-    # Se o dataframe estiver vazio, o teste passa, pois não há o que verificar.
     if df.empty:
         return True, f"{BColors.WARNING}DataFrame de lançamentos está vazio. Teste de integridade pulado.{BColors.ENDC}"
 
@@ -73,7 +67,6 @@ def test_dataframe_integrity():
     if missing_cols:
         return False, f"Colunas faltando no DataFrame: {', '.join(missing_cols)}"
 
-    # Verifica os tipos de dados
     if not pd.api.types.is_datetime64_any_dtype(df['Data']):
         return False, "A coluna 'Data' não está no formato de data (datetime)."
     if not pd.api.types.is_numeric_dtype(df['Valor']):
@@ -100,8 +93,6 @@ def test_print_summary():
         summary += f"\n      - Período dos Dados: {min_date} a {max_date}"
     
     return True, summary
-
-# --- EXECUTOR PRINCIPAL ---
 
 if __name__ == "__main__":
     print(f"{BColors.BOLD}=== INICIANDO FERRAMENTA DE DIAGNÓSTICO ==={BColors.ENDC}")

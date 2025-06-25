@@ -87,7 +87,7 @@ class AppController:
         )
 
     def salvar_novo_lancamento(self, dados_lancamento):
-        dados_lancamento['Data'] = datetime.now()
+        
         dados_lancamento['Empresa'] = self.view.get_empresa_ativa()
         
         success, message = self.model.adicionar_lancamento(dados_lancamento)

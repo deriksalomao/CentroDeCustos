@@ -1,6 +1,3 @@
-# ui_recorrencias.py
-# Lida com a janela e a lógica de Lançamentos Recorrentes.
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime

@@ -1,13 +1,9 @@
-# ui_graficos.py
-# Lida com a janela de Análise Gráfica e exportações.
-
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import io
 from datetime import datetime
 
-# --- IMPORTS CORRIGIDOS ---
-# Adiciona todas as bibliotecas que este módulo utiliza
+
 try:
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -23,8 +19,6 @@ try:
     REPORTLAB_DISPONIVEL = True
 except ImportError:
     REPORTLAB_DISPONIVEL = False
-# --- FIM DAS CORREÇÕES ---
-
 
 class GraficosManager:
     def __init__(self, app):

@@ -1,14 +1,10 @@
-# main.py
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from app.ui.ui_login import TelaLogin
 from app.ui.app_principal import AppPrincipal
 
 def main():
-    # --- ALTERAÇÃO AQUI ---
-    # Trocando o tema para um com mais espaçamento.
     root = ttk.Window(themename="cosmo") 
-    # ----------------------
     
     root.withdraw()
 

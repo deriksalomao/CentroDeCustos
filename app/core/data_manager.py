@@ -1,4 +1,3 @@
-# app/core/data_manager.py
 import pandas as pd
 import json
 import os
@@ -8,7 +7,6 @@ from .constants import LANCAMENTOS_FILE, EMPRESAS_FILE, CATEGORIAS_FILE, CONFIG_
 
 class DataManager:
     def __init__(self):
-        # --- ALTERAÇÃO AQUI: 'Nome/Descrição' mudou para 'Descrição' ---
         self.colunas = ["Data", "Empresa", "Centro de Custo", "Categoria", "Descrição", "Tipo", "Valor"]
         
         self.df_lancamentos = pd.DataFrame(columns=self.colunas)
@@ -17,10 +15,8 @@ class DataManager:
         self.config = {}
         self.load_all_data()
 
-    # O restante do arquivo continua o mesmo...
     def load_all_data(self):
         if os.path.exists(LANCAMENTOS_FILE) and os.path.getsize(LANCAMENTOS_FILE) > 0:
-            # Renomeia a coluna ao carregar o CSV antigo, se necessário
             df = pd.read_csv(LANCAMENTOS_FILE, parse_dates=["Data"])
             if "Nome/Descrição" in df.columns:
                 df.rename(columns={"Nome/Descrição": "Descrição"}, inplace=True)
@@ -66,10 +62,13 @@ class DataManager:
             with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as f: self.config = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError): self.config = {'last_company': 'Empresa Padrão'}
         return self.config
+        
     def save_config(self, config_data):
         with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f: json.dump(config_data, f, ensure_ascii=False, indent=4)
+        
     def get_lancamento_por_indice(self, index):
         return self.df_lancamentos.loc[index]
+        
     def get_filtered_data(self, empresa, filtros):
         if not empresa or self.df_lancamentos.empty: return pd.DataFrame(columns=self.colunas)
         df = self.df_lancamentos[self.df_lancamentos['Empresa'] == empresa].copy()
@@ -82,6 +81,34 @@ class DataManager:
             if filtros['categoria'] != "Todos": df = df[df['Categoria'] == filtros['categoria']]
             if filtros['tipo'] != "Todos": df = df[df['Tipo'] == filtros['tipo']]
         return df.sort_values(by="Data", ascending=False)
+        
     def gerar_dados_teste(self):
-        # ... (código de gerar dados de teste)
+        self.df_lancamentos = pd.DataFrame(columns=self.colunas)
+        
+        num_lancamentos = 150
+        empresas = list(self.dados_empresas.keys())
+        
+        dados_teste = []
+        start_date = datetime.now() - timedelta(days=365)
+        
+        for _ in range(num_lancamentos):
+            empresa = random.choice(empresas)
+            centro_custo = random.choice(self.dados_empresas[empresa])
+            categoria = random.choice(self.categorias)
+            tipo = random.choice(['Receita', 'Despesa'])
+            data = start_date + timedelta(days=random.randint(0, 365), hours=random.randint(0, 23), minutes=random.randint(0, 59))
+            
+            if tipo == 'Receita':
+                descricao = f"Venda Serv B #{random.randint(100, 999)}"
+                valor = round(random.uniform(1000, 15000), 2)
+            else:
+                descricao = f"Pagamento Forn X"
+                valor = round(random.uniform(50, 7500), 2)
+
+            dados_teste.append([data, empresa, centro_custo, categoria, descricao, tipo, valor])
+            
+        novos_lancamentos = pd.DataFrame(dados_teste, columns=self.colunas)
+        self.df_lancamentos = pd.concat([self.df_lancamentos, novos_lancamentos], ignore_index=True)
+        
+        self.save_all_data()
         return True, "Dados de teste gerados com sucesso."
