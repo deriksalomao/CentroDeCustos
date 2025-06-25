@@ -20,12 +20,12 @@ class AppController:
         empresa_ativa = self.view.get_empresa_ativa()
         if not empresa_ativa: return
         
-        # Popula os filtros com os dados corretos
         centros_custo = ["Todos"] + self.model.dados_empresas.get(empresa_ativa, [])
         veiculos_filtro = ["Todos", "N/A"] + self.model.veiculos
+        clientes_filtro = ["Todos", "N/A"] + self.model.clientes
         categorias_filtro = ["Todos"] + self.model.categorias
         
-        self.view.atualizar_filtros_combobox(centros_custo, veiculos_filtro, categorias_filtro)
+        self.view.atualizar_filtros_combobox(centros_custo, veiculos_filtro, clientes_filtro, categorias_filtro)
         self.atualizar_relatorio_e_resumo()
 
     def atualizar_relatorio_e_resumo(self):
@@ -57,15 +57,23 @@ class AppController:
         self.view.resetar_campos_de_filtro()
         self.atualizar_relatorio_e_resumo()
 
-    # --- NOVAS FUNÇÕES DE CADASTRO ---
+    # --- FUNÇÕES DE CADASTRO ---
+    def adicionar_cliente(self):
+        novo_cliente = self.view.get_novo_cliente().strip().title()
+        if not novo_cliente: return
+        if novo_cliente in self.model.clientes:
+            self.view.mostrar_info("Cliente já cadastrado."); return
+        self.model.clientes.append(novo_cliente)
+        self.on_empresa_selecionada() # Atualiza os filtros
+        self.view.set_status(f"Cliente '{novo_cliente}' adicionado.")
+
     def adicionar_veiculo(self):
         novo_veiculo = self.view.get_novo_veiculo().strip().upper()
         if not novo_veiculo: return
         if novo_veiculo in self.model.veiculos:
             self.view.mostrar_info("Veículo já cadastrado."); return
-        
         self.model.veiculos.append(novo_veiculo)
-        self.on_empresa_selecionada() # Atualiza os filtros
+        self.on_empresa_selecionada()
         self.view.set_status(f"Veículo '{novo_veiculo}' adicionado.")
 
     def adicionar_empresa(self):
@@ -102,11 +110,13 @@ class AppController:
         empresa = self.view.get_empresa_ativa()
         centros_custo = self.model.dados_empresas.get(empresa, [])
         veiculos = ["N/A"] + self.model.veiculos
+        clientes = ["N/A"] + self.model.clientes
         categorias = self.model.categorias
         self.view.criar_janela_lancamento(
             titulo="Adicionar Novo Lançamento",
             centros_custo=centros_custo,
             veiculos=veiculos,
+            clientes=clientes,
             categorias=categorias,
             callback_salvar=self.salvar_novo_lancamento
         )
@@ -123,19 +133,17 @@ class AppController:
         if index is None: return
         dados_atuais = self.model.get_lancamento_por_indice(index).to_dict()
         
-        # Garante que dados de lançamentos antigos tenham a chave 'Veículo'
-        if 'Veículo' not in dados_atuais:
-            dados_atuais['Veículo'] = 'N/A'
-            
         empresa = dados_atuais['Empresa']
         centros_custo = self.model.dados_empresas.get(empresa, [])
         veiculos = ["N/A"] + self.model.veiculos
+        clientes = ["N/A"] + self.model.clientes
         categorias = self.model.categorias
         
         self.view.criar_janela_lancamento(
             titulo="Editar Lançamento",
             centros_custo=centros_custo,
             veiculos=veiculos,
+            clientes=clientes,
             categorias=categorias,
             dados_edicao=dados_atuais,
             callback_salvar=lambda dados: self.salvar_edicao_lancamento(index, dados)

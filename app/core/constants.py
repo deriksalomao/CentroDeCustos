@@ -1,12 +1,21 @@
 import os
-from pathlib import Path
+import sys
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-CONFIG_FILE_PATH = BASE_DIR / "config.json"
-DATA_DIR = BASE_DIR / "data"
-LANCAMENTOS_FILE = DATA_DIR / "lancamentos.csv"
-EMPRESAS_FILE = DATA_DIR / "empresas_data.json"
-CATEGORIAS_FILE = DATA_DIR / "categorias.json"
-RECORRENCIAS_FILE = DATA_DIR / "recorrencias.json"
-CENTRO_DE_CUSTO_FILE = DATA_DIR / "centro_de_custo.json"
-VEICULOS_FILE = os.path.join(DATA_DIR, 'veiculos.json') 
+def resource_path(relative_path):
+    """ Obtém o caminho absoluto para o recurso, funciona para dev e para o PyInstaller """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+DATA_DIR = 'data'
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
+LANCAMENTOS_FILE = resource_path(os.path.join(DATA_DIR, 'lancamentos.csv'))
+EMPRESAS_FILE = resource_path(os.path.join(DATA_DIR, 'empresas_e_cc.json'))
+CATEGORIAS_FILE = resource_path(os.path.join(DATA_DIR, 'categorias.json'))
+VEICULOS_FILE = resource_path(os.path.join(DATA_DIR, 'veiculos.json'))
+CLIENTES_FILE = resource_path(os.path.join(DATA_DIR, 'clientes.json'))
+CONFIG_FILE_PATH = resource_path(os.path.join(DATA_DIR, 'config.json'))
