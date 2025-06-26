@@ -1,196 +1,177 @@
 # app/core/controller.py
-from tkinter import messagebox, filedialog
-import pandas as pd
-from datetime import datetime
 import math
+import pandas as pd
+from tkinter import filedialog
+from .data_manager import DataManager
+import typing
+
+if typing.TYPE_CHECKING:
+    from app.ui.app_principal import AppPrincipal
 
 class AppController:
-    def __init__(self, model, view):
+    def __init__(self, model: DataManager, view: 'AppPrincipal'):
         self.model = model
         self.view = view
-        self.current_page = 1
         self.items_per_page = 100
+        self.current_page = 1
         self.full_filtered_df = pd.DataFrame()
+        self.view.set_controller(self)
+        self.initialize_app()
 
-    def iniciar_app(self):
-        self.model.load_all_data_from_db()
-        config = self.model.load_config()
-        empresas = list(self.model.dados_empresas.keys())
-        self.view.atualizar_empresas_combobox(empresas)
-        last_company = config.get('last_company', '')
-        if last_company in empresas:
-            self.view.set_empresa_ativa(last_company)
-        elif empresas:
-            self.view.set_empresa_ativa(empresas[0])
-        self.on_empresa_selecionada()
-
+    def initialize_app(self):
+        empresas = self.model.get_empresas()
+        if empresas:
+            self.view.update_empresa_dropdown(empresas, set_default=True)
+            self.update_all_filters()
+            self.aplicar_filtros_e_resetar_pagina()
+        else:
+            self.view.set_status("Nenhuma empresa encontrada. Adicione uma empresa para começar.")
+    
     def on_empresa_selecionada(self, event=None):
+        self.update_all_filters()
         self.aplicar_filtros_e_resetar_pagina()
+
+    def update_all_filters(self):
+        empresa_ativa = self.view.get_empresa_ativa()
+        if empresa_ativa:
+            self.view.update_dropdown('cc', self.model.get_centros_de_custo(empresa_ativa))
+            self.view.update_dropdown('veiculo', self.model.get_veiculos(empresa_ativa))
+            self.view.update_dropdown('categoria', self.model.get_categorias(empresa_ativa))
+            self.view.update_dropdown('cliente', self.model.get_clientes(empresa_ativa))
+            self.view.update_dropdown('tipo', ["Receita", "Despesa"])
+            self.view.update_dropdown('status', ["Pendente", "Pago", "Atrasado"])
 
     def aplicar_filtros_e_resetar_pagina(self):
         self.current_page = 1
         self.atualizar_relatorio_e_resumo()
 
+    def limpar_filtros(self):
+        self.view.reset_filters()
+        self.aplicar_filtros_e_resetar_pagina()
+
     def atualizar_relatorio_e_resumo(self):
         empresa_ativa = self.view.get_empresa_ativa()
         if not empresa_ativa:
             self.view.set_status("Nenhuma empresa selecionada.")
+            # Limpa a TreeView e o resumo se nenhuma empresa estiver selecionada
+            self.view.update_lancamentos_treeview(pd.DataFrame())
+            self.view.update_financial_summary(0, 0, 0)
             return
 
         filtros = self.view.get_filtros()
         self.full_filtered_df = self.model.get_filtered_data(empresa_ativa, filtros)
+        
         total_items = len(self.full_filtered_df)
         total_pages = math.ceil(total_items / self.items_per_page) if total_items > 0 else 1
         
-        if self.current_page > total_pages:
-            self.current_page = total_pages
-            
+        self.view.update_page_info(self.current_page, total_pages)
+        self.atualizar_treeview_lancamentos()
+        self.atualizar_resumo_financeiro()
+    
+    def atualizar_treeview_lancamentos(self):
         start_index = (self.current_page - 1) * self.items_per_page
         end_index = start_index + self.items_per_page
-        df_paginado = self.full_filtered_df.iloc[start_index:end_index]
-        
-        self.model.load_all_data_from_db()
-        centros_custo = self.model.dados_empresas.get(empresa_ativa, [])
-        self.view.atualizar_filtros_combobox(centros_custo, self.model.veiculos, self.model.clientes, self.model.categorias)
-        
-        self.view.atualizar_treeview_lancamentos(df_paginado)
-        self.view.atualizar_resumo_financeiro(self.full_filtered_df)
-        self.view.atualizar_graficos(self.full_filtered_df)
-        self.view.update_pagination_controls(self.current_page, total_pages)
-        self.view.set_status(f"A exibir {len(df_paginado)} de {total_items} registos.")
+        page_df = self.full_filtered_df.iloc[start_index:end_index]
+        self.view.update_lancamentos_treeview(page_df)
 
-    def go_to_next_page(self):
-        total_pages = math.ceil(len(self.full_filtered_df) / self.items_per_page) if len(self.full_filtered_df) > 0 else 1
-        if self.current_page < total_pages:
-            self.current_page += 1
-            self.atualizar_relatorio_e_resumo()
-
-    def go_to_previous_page(self):
-        if self.current_page > 1:
-            self.current_page -= 1
-            self.atualizar_relatorio_e_resumo()
-
-    def change_items_per_page(self, event=None):
-        self.items_per_page = int(self.view.combo_itens_por_pagina.get())
-        self.aplicar_filtros_e_resetar_pagina()
-
-    def limpar_filtros(self):
-        self.view.resetar_campos_de_filtro()
-        self.aplicar_filtros_e_resetar_pagina()
+    def atualizar_resumo_financeiro(self):
+        resumo = self.model.get_resumo_financeiro(self.full_filtered_df)
+        self.view.update_financial_summary(resumo['receitas'], resumo['despesas'], resumo['saldo'])
     
-    def exportar_para_excel(self):
-        if self.full_filtered_df.empty:
-            self.view.mostrar_info("Não há dados para exportar.")
+    def change_page(self, direction):
+        total_items = len(self.full_filtered_df)
+        total_pages = math.ceil(total_items / self.items_per_page) if total_items > 0 else 1
+        
+        new_page = self.current_page + direction
+        if 1 <= new_page <= total_pages:
+            self.current_page = new_page
+            self.view.update_page_info(self.current_page, total_pages)
+            self.atualizar_treeview_lancamentos()
+    
+    def excluir_lancamento_selecionado(self):
+        selected_id = self.view.get_selected_lancamento_id()
+        if selected_id is None:
+            self.view.set_status("Nenhum lançamento selecionado para excluir.")
             return
-        try:
-            caminho_arquivo = filedialog.asksaveasfilename(title="Salvar Relatório", defaultextension=".xlsx", filetypes=[("Excel", "*.xlsx")])
-            if caminho_arquivo:
-                df_export = self.full_filtered_df.copy().rename(columns={"Centro_de_Custo": "Centro de Custo"})
-                df_export['Data'] = pd.to_datetime(df_export['Data']).dt.strftime('%d/%m/%Y')
-                df_export.to_excel(caminho_arquivo, index=False, engine='openpyxl')
-                self.view.mostrar_info("Relatório exportado!")
-        except Exception as e:
-            self.view.mostrar_info(f"Erro ao exportar:\n{e}")
-
-    def adicionar_entidade(self, nome_tabela, nome_coluna, valor):
-        success, message = self.model.adicionar_entidade(nome_tabela, nome_coluna, valor)
-        if success:
-            self.atualizar_relatorio_e_resumo()
-        self.view.set_status(message)
-        return success, message
-
-    def adicionar_cliente(self): self.adicionar_entidade("clientes", "nome", self.view.get_novo_cliente().strip().title())
-    def adicionar_veiculo(self): self.adicionar_entidade("veiculos", "placa", self.view.get_novo_veiculo().strip().upper())
-    def adicionar_categoria(self): self.adicionar_entidade("categorias", "nome", self.view.get_nova_categoria().strip().title())
-    def adicionar_empresa(self): self.adicionar_entidade("empresas", "nome", self.view.get_nova_empresa().strip().title())
         
-    def adicionar_centro_custo(self):
-        empresa = self.view.get_empresa_ativa()
-        novo_cc = self.view.get_novo_cc().strip().title()
-        success, message = self.model.adicionar_centro_custo(empresa, novo_cc)
-        if success:
-            self.atualizar_relatorio_e_resumo()
-        self.view.set_status(message)
-
-    def abrir_janela_gerenciamento(self):
-        self.view.abrir_janela_gerenciamento()
-
-    def abrir_janela_gerenciar_clientes(self):
-        self.view.abrir_janela_gerenciar_entidade(
-            titulo="Gerenciar Clientes", lista_itens=self.model.clientes,
-            callback_adicionar=lambda nome: self.adicionar_entidade("clientes", "nome", nome),
-            callback_excluir=lambda nome: self.excluir_entidade_com_verificacao("clientes", nome)
-        )
-        
-    def abrir_janela_gerenciar_veiculos(self):
-        self.view.abrir_janela_gerenciar_entidade(
-            titulo="Gerenciar Veículos", lista_itens=self.model.veiculos,
-            callback_adicionar=lambda placa: self.adicionar_entidade("veiculos", "placa", placa.upper()),
-            callback_excluir=lambda placa: self.excluir_entidade_com_verificacao("veiculos", placa)
-        )
-
-    def abrir_janela_gerenciar_categorias(self):
-        self.view.abrir_janela_gerenciar_entidade(
-            titulo="Gerenciar Categorias", lista_itens=self.model.categorias,
-            callback_adicionar=lambda nome: self.adicionar_entidade("categorias", "nome", nome),
-            callback_excluir=lambda nome: self.excluir_entidade_com_verificacao("categorias", nome)
-        )
-
-    def excluir_entidade_com_verificacao(self, tabela, valor):
-        mapa_colunas = {"clientes": "Cliente", "veiculos": "Veículo", "categorias": "Categoria"}
-        coluna_lancamentos = mapa_colunas.get(tabela)
-        
-        if self.model.verificar_uso_entidade(coluna_lancamentos, valor):
-            return False, f"Não é possível excluir '{valor}', pois está a ser utilizado em lançamentos."
-        
-        coluna_tabela = "nome" if tabela != "veiculos" else "placa"
-        success, message = self.model.excluir_entidade(tabela, coluna_tabela, valor)
-        if success:
-            self.atualizar_relatorio_e_resumo()
-        return success, message
-        
-    def abrir_janela_novo_lancamento(self):
-        empresa = self.view.get_empresa_ativa()
-        self.view.criar_janela_lancamento(titulo="Adicionar Lançamento", centros_custo=self.model.dados_empresas.get(empresa, []), veiculos=self.model.veiculos, clientes=self.model.clientes, categorias=self.model.categorias, callback_salvar=self.salvar_novo_lancamento)
+        if self.view.ask_yes_no("Tem certeza que deseja excluir o lançamento selecionado?"):
+            success, message = self.model.excluir_lancamento(selected_id)
+            if success:
+                self.aplicar_filtros_e_resetar_pagina()
+            self.view.set_status(message)
 
     def salvar_novo_lancamento(self, dados):
         dados['Empresa'] = self.view.get_empresa_ativa()
-        if "Centro de Custo" in dados: dados["Centro_de_Custo"] = dados.pop("Centro de Custo")
+        if not dados['Empresa']:
+            self.view.set_status("Erro: Nenhuma empresa está ativa para associar o lançamento.")
+            return
+
         success, message = self.model.adicionar_lancamento(dados)
         if success:
             self.aplicar_filtros_e_resetar_pagina()
         self.view.set_status(message)
 
-    def abrir_janela_edicao(self):
-        selecionado = self.view.tree_relatorio.focus()
-        if not selecionado: return
-        index = int(selecionado)
-        dados_atuais = self.model.get_lancamento_por_indice(index)
-        if dados_atuais is None: return
+    def adicionar_item_rapido(self, tipo_item, valor_item):
+        tabela_map = {
+            'Cliente': 'clientes', 'Veículo': 'veiculos', 'Centro de Custo': 'centros_de_custo',
+            'Categoria': 'categorias', 'Empresa': 'empresas'
+        }
         
-        empresa = dados_atuais['Empresa']
-        self.view.criar_janela_lancamento(titulo="Editar Lançamento", centros_custo=self.model.dados_empresas.get(empresa, []), veiculos=self.model.veiculos, clientes=self.model.clientes, categorias=self.model.categorias, dados_edicao=dados_atuais, callback_salvar=lambda dados: self.salvar_edicao_lancamento(index, dados))
+        success, message = False, "Ocorreu um erro desconhecido."
 
-    def salvar_edicao_lancamento(self, index, dados):
-        if "Centro de Custo" in dados: dados["Centro_de_Custo"] = dados.pop("Centro de Custo")
-        success, message = self.model.editar_lancamento(index, dados)
+        if not valor_item or not valor_item.strip():
+            message = f"O nome para '{tipo_item}' não pode estar vazio."
+            self.view.set_status(message)
+            return
+
+        valor_item = valor_item.strip()
+
+        # Lógica corrigida: trata 'Empresa' como um caso especial
+        if tipo_item == 'Empresa':
+            success, message = self.model.adicionar_item_generico(tabela_map[tipo_item], {'Nome': valor_item})
+            if success:
+                # Após adicionar uma nova empresa, atualiza a lista principal de empresas
+                empresas = self.model.get_empresas()
+                self.view.update_empresa_dropdown(empresas)
+                # Seleciona a empresa recém-criada
+                self.view.combo_empresa_ativa.set(valor_item)
+                self.on_empresa_selecionada() # Força a atualização dos outros filtros
+        else:
+            # Para todos os outros tipos, exige uma empresa ativa
+            empresa_ativa = self.view.get_empresa_ativa()
+            if not empresa_ativa:
+                message = "Selecione uma empresa antes de adicionar outros itens."
+            else:
+                dados = {'Nome': valor_item, 'Empresa': empresa_ativa}
+                success, message = self.model.adicionar_item_generico(tabela_map[tipo_item], dados)
+
+        # Se qualquer adição foi bem-sucedida (inclusive de empresa), atualiza os filtros
         if success:
-            self.aplicar_filtros_e_resetar_pagina()
+            self.update_all_filters()
+        
         self.view.set_status(message)
 
-    def excluir_lancamento_selecionado(self):
-        selecionado = self.view.tree_relatorio.focus()
-        if not selecionado:
-            self.view.mostrar_info("Nenhum lançamento selecionado.")
+    def exportar_para_excel(self):
+        if self.full_filtered_df.empty:
+            self.view.set_status("Não há dados para exportar.")
             return
-        index = int(selecionado)
-        if self.view.confirmar_acao("Confirmar Exclusão", "Deseja excluir o lançamento selecionado?"):
-            success, message = self.model.excluir_lancamento(index)
-            if success:
-                self.aplicar_filtros_e_resetar_pagina()
-                self.view.set_status(message)
-    
-    def ao_fechar(self):
-        config = {'last_company': self.view.get_empresa_ativa()}
-        self.model.save_config(config)
-        self.view.destruir()
+        
+        filepath = filedialog.asksaveasfilename(defaultextension=".xlsx",
+                                               filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")])
+        if not filepath:
+            return
+
+        try:
+            df_to_export = self.full_filtered_df.copy()
+            if 'Data' in df_to_export.columns:
+                # Formata a data para um formato amigável no Excel
+                df_to_export['Data'] = pd.to_datetime(df_to_export['Data']).dt.strftime('%d/%m/%Y %H:%M:%S')
+            
+            # Resetar o índice para que o 'id' (se existir) vire uma coluna
+            if df_to_export.index.name == 'id':
+                df_to_export.reset_index(inplace=True)
+            
+            df_to_export.to_excel(filepath, index=False, engine='openpyxl')
+            self.view.set_status(f"Dados exportados com sucesso para {filepath}")
+        except Exception as e:
+            self.view.set_status(f"Erro ao exportar: {e}")

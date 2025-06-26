@@ -1,25 +1,31 @@
 # main.py
+import tkinter as tk
 import ttkbootstrap as ttk
 from app.ui.app_principal import AppPrincipal
-from app.ui.ui_login import LoginWindow
+from app.core.data_manager import DataManager
+from app.core.controller import AppController
 
-def iniciar_app_principal(login_window=None):
-    """Fecha a janela de login (se existir) e inicia a aplicação principal."""
-    if login_window:
-        login_window.destroy()
+def iniciar_app_principal():
+    # Usar a janela do ttkbootstrap
     root = ttk.Window(themename="litera")
-    AppPrincipal(root)
+
+    style = ttk.Style()
+    # Define uma fonte maior para os Labels, Buttons, Entries e Comboboxes
+    style.configure('TLabel', font=('Segoe UI', 11, 'bold'))
+    style.configure('TButton', font=('Segoe UI', 11, 'bold'))
+    style.configure('TEntry', font=('Segoe UI', 11))
+    style.configure('TCombobox', font=('Segoe UI', 11))
+    # Para as colunas da Treeview
+    style.configure('Treeview.Heading', font=('Segoe UI', 11, 'bold'))
+    style.configure('Treeview', font=('Segoe UI', 10))
+
+    # Criar as instâncias
+    model = DataManager()
+    view = AppPrincipal(root)
+    # O controller agora é criado aqui, e ele mesmo se conecta à view
+    controller = AppController(model, view)
+    
     root.mainloop()
 
-def on_login_success(login_window):
-    """Callback chamado quando o login é bem-sucedido."""
-    iniciar_app_principal(login_window)
-
 if __name__ == "__main__":
-    # Para desenvolvimento, pode querer saltar o login.
-    # Se quiser ativar o login, comente a linha abaixo e descomente as duas seguintes.
     iniciar_app_principal()
-
-    # login_root = ttk.Window(themename="litera")
-    # LoginWindow(login_root, on_success=lambda: on_login_success(login_root))
-    # login_root.mainloop()
