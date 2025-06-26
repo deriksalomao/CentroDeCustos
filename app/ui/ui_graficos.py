@@ -11,41 +11,33 @@ class GraficosFrame(ttk.Frame):
         self.pack(fill=ttk.BOTH, expand=True)
 
     def atualizar_todos_os_graficos(self, df_filtrado):
-        # 1. Limpa todos os widgets antigos da aba
         for widget in self.winfo_children():
             widget.destroy()
 
-        # 2. Se não houver dados, exibe uma mensagem centralizada
         if df_filtrado.empty:
             msg_label = ttk.Label(self, text="Sem dados para exibir no período selecionado.", font=("Segoe UI", 12))
             msg_label.pack(pady=50)
             return
 
-        # 3. Cria um sistema de abas (Notebook) dentro da aba principal de gráficos
         notebook_graficos = ttk.Notebook(self)
         notebook_graficos.pack(fill=ttk.BOTH, expand=True, padx=5, pady=5)
 
-        # 4. Cria um Frame para cada aba de gráfico
         tab_evolucao = ttk.Frame(notebook_graficos)
         tab_pizza = ttk.Frame(notebook_graficos)
 
         notebook_graficos.add(tab_evolucao, text='Evolução Mensal')
         notebook_graficos.add(tab_pizza, text='Distribuição de Despesas')
 
-        # 5. Desenha cada gráfico em sua respectiva aba
         self._criar_grafico_evolucao(df_filtrado, parent_tab=tab_evolucao)
         self._criar_grafico_despesas_pizza(df_filtrado, parent_tab=tab_pizza)
 
     def _criar_grafico_evolucao(self, df, parent_tab):
-        """Cria o gráfico de barras da evolução de Receitas x Despesas."""
         df_copia = df.copy()
         df_copia['Data'] = pd.to_datetime(df_copia['Data'])
         df_copia.set_index('Data', inplace=True)
         
-        # CORREÇÃO APLICADA AQUI: Trocado 'M' por 'ME'
         df_mensal = df_copia.groupby([pd.Grouper(freq='ME'), 'Tipo'])['Valor'].sum().unstack(fill_value=0)
         
-        # Garante que as colunas Despesa e Receita existam para evitar erros
         if 'Despesa' not in df_mensal: df_mensal['Despesa'] = 0
         if 'Receita' not in df_mensal: df_mensal['Receita'] = 0
             
@@ -54,7 +46,6 @@ class GraficosFrame(ttk.Frame):
         figura = Figure(figsize=(10, 4), dpi=100)
         ax = figura.add_subplot(111)
         
-        # O Pandas ordena as colunas alfabeticamente ('Despesa', 'Receita')
         df_mensal[['Despesa', 'Receita']].plot(kind='bar', ax=ax, color=['#dc3545', '#28a745'], width=0.8)
 
         ax.set_title('Evolução Mensal: Receitas vs. Despesas', fontsize=16, pad=20)
@@ -70,7 +61,6 @@ class GraficosFrame(ttk.Frame):
         canvas.get_tk_widget().pack(fill=ttk.BOTH, expand=True, padx=10, pady=10)
 
     def _criar_grafico_despesas_pizza(self, df, parent_tab):
-        """Cria o gráfico de pizza da distribuição de despesas."""
         df_despesas = df[df['Tipo'] == 'Despesa'].copy()
 
         if df_despesas.empty:

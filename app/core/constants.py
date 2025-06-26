@@ -1,21 +1,17 @@
+# app/core/constants.py
 import os
 import sys
 
 def resource_path(relative_path):
-    """ Obtém o caminho absoluto para o recurso, funciona para dev e para o PyInstaller """
     try:
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     return os.path.join(base_path, relative_path)
 
-DATA_DIR = 'data'
+DATA_DIR = resource_path('data')
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
-LANCAMENTOS_FILE = resource_path(os.path.join(DATA_DIR, 'lancamentos.csv'))
-EMPRESAS_FILE = resource_path(os.path.join(DATA_DIR, 'empresas_e_cc.json'))
-CATEGORIAS_FILE = resource_path(os.path.join(DATA_DIR, 'categorias.json'))
-VEICULOS_FILE = resource_path(os.path.join(DATA_DIR, 'veiculos.json'))
-CLIENTES_FILE = resource_path(os.path.join(DATA_DIR, 'clientes.json'))
-CONFIG_FILE_PATH = resource_path(os.path.join(DATA_DIR, 'config.json'))
+DATABASE_FILE = os.path.join(DATA_DIR, 'transportadora.db')
+CONFIG_FILE_PATH = os.path.join(DATA_DIR, 'config.json')

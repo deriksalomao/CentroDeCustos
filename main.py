@@ -1,30 +1,25 @@
+# main.py
 import ttkbootstrap as ttk
-from ttkbootstrap.constants import *
-from app.ui.ui_login import TelaLogin
 from app.ui.app_principal import AppPrincipal
+from app.ui.ui_login import LoginWindow
 
-def main():
-    root = ttk.Window(themename="cosmo") 
-    
-    root.withdraw()
-    def iniciar_app_principal():
-        login_toplevel.destroy()
-        AppPrincipal(root)
-        root.deiconify()
-
-    login_toplevel = ttk.Toplevel(title="Login")
-    login_toplevel.geometry("300x150")
-    login_toplevel.resizable(False, False)
-    login_toplevel.place_window_center()
-
-    def on_success():
-        iniciar_app_principal()
-
-    TelaLogin(login_toplevel, on_login_success=on_success)
-    login_toplevel.protocol("WM_DELETE_WINDOW", root.destroy)
+def iniciar_app_principal(login_window=None):
+    """Fecha a janela de login (se existir) e inicia a aplicação principal."""
+    if login_window:
+        login_window.destroy()
+    root = ttk.Window(themename="litera")
+    AppPrincipal(root)
     root.mainloop()
 
-if __name__ == "__main__":
-    main()
+def on_login_success(login_window):
+    """Callback chamado quando o login é bem-sucedido."""
+    iniciar_app_principal(login_window)
 
-    
+if __name__ == "__main__":
+    # Para desenvolvimento, pode querer saltar o login.
+    # Se quiser ativar o login, comente a linha abaixo e descomente as duas seguintes.
+    iniciar_app_principal()
+
+    # login_root = ttk.Window(themename="litera")
+    # LoginWindow(login_root, on_success=lambda: on_login_success(login_root))
+    # login_root.mainloop()
