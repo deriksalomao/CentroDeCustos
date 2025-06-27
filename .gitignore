@@ -19,3 +19,7 @@ env/
 
 # Ficheiros de pacotes do Python
 *.egg-info
+
+# Artefatos de compilação do PyInstaller
+/build/
+/dist/
