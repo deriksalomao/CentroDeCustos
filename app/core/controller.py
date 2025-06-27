@@ -33,13 +33,40 @@ class AppController:
 
     def update_all_filters(self):
         empresa_ativa = self.view.get_empresa_ativa()
+        
+        # Atualiza os dropdowns de filtro na VIEW PRINCIPAL
+        self.view.update_dropdown('tipo', ["Receita", "Despesa"])
+        self.view.update_dropdown('status', ["Pendente", "Pago", "Atrasado"])
+        
+        # Atualiza os dropdowns de CADASTRO e FILTRO que dependem da empresa
         if empresa_ativa:
-            self.view.update_dropdown('cc', self.model.get_centros_de_custo(empresa_ativa))
-            self.view.update_dropdown('veiculo', self.model.get_veiculos(empresa_ativa))
-            self.view.update_dropdown('categoria', self.model.get_categorias(empresa_ativa))
-            self.view.update_dropdown('cliente', self.model.get_clientes(empresa_ativa))
-            self.view.update_dropdown('tipo', ["Receita", "Despesa"])
-            self.view.update_dropdown('status', ["Pendente", "Pago", "Atrasado"])
+            centros_custo = self.model.get_centros_de_custo(empresa_ativa)
+            veiculos = self.model.get_veiculos(empresa_ativa)
+            categorias = self.model.get_categorias(empresa_ativa)
+            clientes = self.model.get_clientes(empresa_ativa)
+            
+            # Atualiza filtros na aba de registros
+            self.view.update_dropdown('cc', centros_custo)
+            self.view.update_dropdown('veiculo', veiculos)
+            self.view.update_dropdown('categoria', categorias)
+            self.view.update_dropdown('cliente', clientes)
+
+            # ATUALIZA OS NOVOS COMBOBOXES DE EXCLUSÃO NO PAINEL ESQUERDO
+            self.view.update_cadastro_dropdown('Centro de Custo', centros_custo)
+            self.view.update_cadastro_dropdown('Veículo', veiculos)
+            self.view.update_cadastro_dropdown('Categoria', categorias)
+            self.view.update_cadastro_dropdown('Cliente', clientes)
+        else:
+            # Limpa os dropdowns se nenhuma empresa for selecionada
+            for item in ['cc', 'veiculo', 'categoria', 'cliente']:
+                self.view.update_dropdown(item, [])
+            for item in ['Centro de Custo', 'Veículo', 'Categoria', 'Cliente']:
+                self.view.update_cadastro_dropdown(item, [])
+
+        # Dropdown de empresas é sempre atualizado independentemente da seleção
+        empresas = self.model.get_empresas()
+        self.view.update_cadastro_dropdown('Empresa', empresas)
+
 
     def aplicar_filtros_e_resetar_pagina(self):
         self.current_page = 1
@@ -53,10 +80,8 @@ class AppController:
         empresa_ativa = self.view.get_empresa_ativa()
         if not empresa_ativa:
             self.view.set_status("Nenhuma empresa selecionada.")
-            # Limpa a TreeView e o resumo se nenhuma empresa estiver selecionada
             self.view.update_lancamentos_treeview(pd.DataFrame())
             self.view.update_financial_summary(0, 0, 0)
-            # Limpa também os gráficos
             self.view.painel_direito.graficos_view.atualizar_todos_os_graficos(pd.DataFrame())
             return
 
@@ -69,11 +94,7 @@ class AppController:
         self.view.update_page_info(self.current_page, total_pages)
         self.atualizar_treeview_lancamentos()
         self.atualizar_resumo_financeiro()
-        
-        # --- ALTERAÇÃO AQUI ---
-        # Chame a atualização dos gráficos com os dados filtrados
         self.view.painel_direito.graficos_view.atualizar_todos_os_graficos(self.full_filtered_df)
-        # ---------------------
     
     def atualizar_treeview_lancamentos(self):
         start_index = (self.current_page - 1) * self.items_per_page
@@ -113,7 +134,6 @@ class AppController:
                 self.aplicar_filtros_e_resetar_pagina()
             self.view.set_status(message)
 
-
     def salvar_novo_lancamento(self, dados):
         dados['Empresa'] = self.view.get_empresa_ativa()
         if not dados['Empresa']:
@@ -135,7 +155,6 @@ class AppController:
         dados_lancamento = self.model.get_lancamento_by_id(selected_id_int)
 
         if dados_lancamento:
-            # Note que estamos passando um novo callback para o salvamento
             self.view.painel_direito._criar_janela_lancamento(
                 "Editar Lançamento", 
                 lambda dados: self.salvar_lancamento_editado(selected_id_int, dados),
@@ -163,18 +182,14 @@ class AppController:
 
         valor_item = valor_item.strip()
 
-        # Lógica corrigida: trata 'Empresa' como um caso especial
         if tipo_item == 'Empresa':
             success, message = self.model.adicionar_item_generico(tabela_map[tipo_item], {'Nome': valor_item})
             if success:
-                # Após adicionar uma nova empresa, atualiza a lista principal de empresas
                 empresas = self.model.get_empresas()
                 self.view.update_empresa_dropdown(empresas)
-                # Seleciona a empresa recém-criada
                 self.view.set_empresa_ativa(valor_item)
-                self.on_empresa_selecionada() # Força a atualização dos outros filtros
+                self.on_empresa_selecionada()
         else:
-            # Para todos os outros tipos, exige uma empresa ativa
             empresa_ativa = self.view.get_empresa_ativa()
             if not empresa_ativa:
                 message = "Selecione uma empresa antes de adicionar outros itens."
@@ -182,7 +197,6 @@ class AppController:
                 dados = {'Nome': valor_item, 'Empresa': empresa_ativa}
                 success, message = self.model.adicionar_item_generico(tabela_map[tipo_item], dados)
 
-        # Se qualquer adição foi bem-sucedida (inclusive de empresa), atualiza os filtros
         if success:
             self.update_all_filters()
         
@@ -193,18 +207,14 @@ class AppController:
             self.view.set_status("Não há dados para exportar.")
             return
         
-        filepath = filedialog.asksaveasfilename(defaultextension=".xlsx",
-                                               filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")])
+        filepath = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")])
         if not filepath:
             return
 
         try:
             df_to_export = self.full_filtered_df.copy()
             if 'Data' in df_to_export.columns:
-                # Formata a data para um formato amigável no Excel
                 df_to_export['Data'] = pd.to_datetime(df_to_export['Data']).dt.strftime('%d/%m/%Y %H:%M:%S')
-            
-            # Resetar o índice para que o 'id' (se existir) vire uma coluna
             if df_to_export.index.name == 'id':
                 df_to_export.reset_index(inplace=True)
             
@@ -212,3 +222,37 @@ class AppController:
             self.view.set_status(f"Dados exportados com sucesso para {filepath}")
         except Exception as e:
             self.view.set_status(f"Erro ao exportar: {e}")
+            
+    def excluir_item_rapido(self, tipo_item, valor_item):
+        if not valor_item:
+            self.view.set_status(f"Nenhum item do tipo '{tipo_item}' selecionado para exclusão.")
+            return
+
+        tabela_map = {
+            'Cliente': 'clientes', 'Veículo': 'veiculos', 
+            'Centro de Custo': 'centros_de_custo',
+            'Categoria': 'categorias', 'Empresa': 'empresas'
+        }
+        
+        empresa_ativa = self.view.get_empresa_ativa()
+        if tipo_item != 'Empresa' and not empresa_ativa:
+            self.view.set_status("Selecione uma empresa antes de excluir um item.")
+            return
+
+        if not self.view.ask_yes_no(f"Tem certeza que deseja excluir '{valor_item}'?"):
+            return
+
+        success, message = self.model.excluir_item_generico(
+            tabela_map[tipo_item], 
+            valor_item, 
+            empresa_ativa if tipo_item != 'Empresa' else None
+        )
+
+        if success:
+            if tipo_item == 'Empresa':
+                 empresas = self.model.get_empresas()
+                 self.view.update_empresa_dropdown(empresas, set_default=True)
+            self.update_all_filters()
+            self.aplicar_filtros_e_resetar_pagina()
+
+        self.view.set_status(message)

@@ -29,4 +29,3 @@ def iniciar_app_principal():
 
 if __name__ == "__main__":
     iniciar_app_principal()
-

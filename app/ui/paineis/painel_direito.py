@@ -154,21 +154,36 @@ class PainelDireito(ttk.Frame):
         self.lbl_info_pagina.config(text=f"Página {atual} de {total}")
 
     def atualizar_arvore_lancamentos(self, dataframe):
-        for i in self.arvore_relatorio.get_children():
-            self.arvore_relatorio.delete(i)
-        if dataframe is None: return
+        self.arvore_relatorio.delete(*self.arvore_relatorio.get_children())
+
+        if dataframe is None or dataframe.empty:
+            return
 
         df_exibicao = dataframe.rename(columns={"Centro_de_Custo": "Centro de Custo"})
+        df_exibicao['Valor'] = pd.to_numeric(df_exibicao['Valor'], errors='coerce').fillna(0)
+        df_exibicao['Data'] = pd.to_datetime(df_exibicao['Data'], errors='coerce')
+
+        dados_formatados = []
         for index, row in df_exibicao.iterrows():
-            valor_formatado = f"R$ {row.get('Valor', 0):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-            data_formatada = row.get('Data', pd.Timestamp.now()).strftime('%d/%m/%Y')
+            valor_formatado = f"R$ {row['Valor']:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            data_formatada = row['Data'].strftime('%d/%m/%Y') if pd.notna(row['Data']) else ''
 
             valores_linha = (
-                data_formatada, row.get('Empresa', ''), row.get('Centro de Custo', ''),
-                row.get('Veículo', ''), row.get('Cliente', ''), row.get('Categoria', ''),
-                row.get('Descrição', ''), row.get('Tipo', ''), valor_formatado, row.get('Status', '')
+                data_formatada,
+                str(row.get('Empresa', '')),
+                str(row.get('Centro de Custo', '')),
+                str(row.get('Veículo', '')),
+                str(row.get('Cliente', '')),
+                str(row.get('Categoria', '')),
+                str(row.get('Descrição', '')),
+                str(row.get('Tipo', '')),
+                valor_formatado,
+                str(row.get('Status', ''))
             )
-            self.arvore_relatorio.insert("", "end", iid=index, values=valores_linha)
+            dados_formatados.append((index, valores_linha))
+
+        for iid, valores in dados_formatados:
+            self.arvore_relatorio.insert("", "end", iid=iid, values=valores)
 
     def obter_id_lancamento_selecionado(self):
         itens_selecionados = self.arvore_relatorio.selection()

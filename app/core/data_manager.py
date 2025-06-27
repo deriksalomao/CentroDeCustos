@@ -138,3 +138,27 @@ class DataManager:
             self.save_lancamentos()
             return True, "Lançamento atualizado com sucesso."
         return False, "Erro: Lançamento não encontrado."
+    
+    def excluir_item_generico(self, tabela, nome_item, empresa=None):
+        if tabela not in self.data_lookups:
+            return False, "Tipo de cadastro inválido."
+
+        item_encontrado = False
+        # Filtra a lista para remover o item desejado
+        itens_originais = self.data_lookups[tabela]
+        itens_filtrados = []
+        for item in itens_originais:
+            # A condição para manter um item na lista é:
+            # - O nome não bate, OU
+            # - O nome bate, mas a empresa não (para itens que dependem da empresa)
+            if item.get('Nome') != nome_item or (empresa and item.get('Empresa') != empresa):
+                itens_filtrados.append(item)
+            else:
+                item_encontrado = True
+
+        if not item_encontrado:
+            return False, f"Erro: Item '{nome_item}' não encontrado para exclusão."
+
+        self.data_lookups[tabela] = itens_filtrados
+        self.save_data(tabela)
+        return True, f"Item '{nome_item}' excluído com sucesso."
