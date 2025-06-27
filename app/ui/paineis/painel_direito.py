@@ -76,25 +76,41 @@ class PainelDireito(ttk.Frame):
         return combo
 
     def _criar_aba_registros(self):
-        # Conteúdo da Treeview e Paginação
-        colunas = ('Data', 'Empresa', 'Centro de Custo', 'Veículo', 'Categoria', 'Descrição', 'Tipo', 'Valor')
-        self.arvore_relatorio = ttk.Treeview(self.aba_registros, columns=colunas, show='headings', height=20)
-        for col in colunas:
-            self.arvore_relatorio.heading(col, text=col)
-            self.arvore_relatorio.column(col, width=120)
-        self.arvore_relatorio.pack(side="top", fill="both", expand=True)
-
+        # --- PARTE 1: CRIAÇÃO DOS CONTROLES DE PAGINAÇÃO (AGORA NO INÍCIO) ---
+        # Vamos criar e posicionar a paginação na parte de baixo PRIMEIRO.
         frame_paginacao = ttk.Frame(self.aba_registros)
-        frame_paginacao.pack(fill='x', pady=5)
+        frame_paginacao.pack(side="bottom", fill="x", pady=5) # Alterado para side="bottom"
+
         self.btn_pagina_anterior = ttk.Button(frame_paginacao, text="< Anterior")
         self.btn_pagina_anterior.pack(side='left', padx=5)
+
         self.lbl_info_pagina = ttk.Label(frame_paginacao, text="Página 1 de 1")
         self.lbl_info_pagina.pack(side='left', padx=5)
+
         self.btn_proxima_pagina = ttk.Button(frame_paginacao, text="Próximo >")
         self.btn_proxima_pagina.pack(side='left', padx=5)
 
         self.btn_excluir_lancamento = ttk.Button(frame_paginacao, text="Excluir Lançamento Selecionado")
         self.btn_excluir_lancamento.pack(side='right', padx=10)
+
+
+        # --- PARTE 2: CRIAÇÃO DA TABELA (TREEVIEW) ---
+        # Agora, a tabela pode se expandir e preencher o resto do espaço.
+        colunas = ('Data', 'Empresa', 'Centro de Custo', 'Veículo', 'Cliente', 'Categoria', 'Descrição', 'Tipo', 'Valor', 'Status')
+        self.arvore_relatorio = ttk.Treeview(self.aba_registros, columns=colunas, show='headings', height=20)
+
+        # Configuração dos cabeçalhos e colunas
+        for col in colunas:
+            self.arvore_relatorio.heading(col, text=col)
+            if col in ['Descrição', 'Centro de Custo']:
+                self.arvore_relatorio.column(col, width=180)
+            elif col in ['Data', 'Tipo', 'Status']:
+                self.arvore_relatorio.column(col, width=100)
+            else:
+                self.arvore_relatorio.column(col, width=120)
+
+        # Comando para exibir a tabela no espaço restante
+        self.arvore_relatorio.pack(side="top", fill="both", expand=True)
 
     # Métodos que estavam em AppPrincipal e agora pertencem a PainelDireito
     def obter_filtros(self):
@@ -139,8 +155,8 @@ class PainelDireito(ttk.Frame):
 
             valores_linha = (
                 data_formatada, row.get('Empresa', ''), row.get('Centro de Custo', ''),
-                row.get('Veículo', ''), row.get('Categoria', ''), row.get('Descrição', ''),
-                row.get('Tipo', ''), valor_formatado
+                row.get('Veículo', ''), row.get('Cliente', ''), row.get('Categoria', ''),
+                row.get('Descrição', ''), row.get('Tipo', ''), valor_formatado, row.get('Status', '')
             )
             self.arvore_relatorio.insert("", "end", iid=index, values=valores_linha)
 
@@ -185,6 +201,12 @@ class PainelDireito(ttk.Frame):
         combo_veiculo.grid(row=linha, column=1, sticky="ew", pady=5)
         linha += 1
 
+        ttk.Label(frame, text="Cliente:").grid(row=linha, column=0, sticky="w", pady=5)
+        valores_cliente = obter_valores_combobox(self.combo_filtro_cliente)
+        combo_cliente = ttk.Combobox(frame, state="readonly", values=["Nenhum"] + (valores_cliente[1:] if valores_cliente else []))
+        combo_cliente.grid(row=linha, column=1, sticky="ew", pady=5)
+        linha += 1
+
         ttk.Label(frame, text="Categoria:").grid(row=linha, column=0, sticky="w", pady=5)
         valores_cat = obter_valores_combobox(self.combo_filtro_categoria)
         combo_cat = ttk.Combobox(frame, state="readonly", values=valores_cat[1:] if valores_cat else [])
@@ -214,13 +236,16 @@ class PainelDireito(ttk.Frame):
             try:
                 valor_float = float(entrada_valor.get().replace(",", "."))
                 data_obj = datetime.strptime(entrada_data.entry.get(), '%d/%m/%Y')
+                
                 dados = {
                     'Data': data_obj, 'Centro_de_Custo': combo_cc.get() or None,
                     'Veículo': combo_veiculo.get() if combo_veiculo.get() != "N/A" else None,
                     'Categoria': combo_cat.get(), 'Descrição': entrada_desc.get(),
                     'Tipo': combo_tipo.get(), 'Valor': valor_float,
-                    'Cliente': None, 'Status': 'Pendente'
+                    'Cliente': combo_cliente.get() if combo_cliente.get() != "Nenhum" else None,
+                    'Status': 'Pendente'
                 }
+
                 callback_salvar(dados)
                 popup.destroy()
             except ValueError:
@@ -230,3 +255,24 @@ class PainelDireito(ttk.Frame):
         btn_salvar.grid(row=linha, column=0, columnspan=2, pady=20)
         
         frame.columnconfigure(1, weight=1)
+
+    def resetar_filtros(self):
+        
+        # Resetar Datas
+        hoje = datetime.now()
+        data_inicio_padrao = hoje - timedelta(days=365)
+        
+        # A forma correta de resetar o DateEntry é limpar o campo e inserir o novo valor
+        self.entrada_data_inicio.entry.delete(0, tk.END)
+        self.entrada_data_inicio.entry.insert(0, data_inicio_padrao.strftime('%d/%m/%Y'))
+        
+        self.entrada_data_fim.entry.delete(0, tk.END)
+        self.entrada_data_fim.entry.insert(0, hoje.strftime('%d/%m/%Y'))
+
+        # Resetar todos os Comboboxes de filtro
+        self.combo_filtro_tipo.set("Todos")
+        self.combo_filtro_cc.set("Todos")
+        self.combo_filtro_veiculo.set("Todos")
+        self.combo_filtro_categoria.set("Todos")
+        self.combo_filtro_cliente.set("Todos")
+        self.combo_filtro_status.set("Todos")

@@ -1,7 +1,7 @@
-# app/ui/panels/left_panel.py
+# app/ui/paineis/painel_esquerdo.py
 import tkinter as tk
 import ttkbootstrap as ttk
-from ttkbootstrap.widgets import DateEntry
+from ttkbootstrap.scrolled import ScrolledFrame # 1. IMPORTAR O COMPONENTE
 
 class PainelEsquerdo(ttk.Frame):
     def __init__(self, parent_frame, controller):
@@ -10,15 +10,18 @@ class PainelEsquerdo(ttk.Frame):
         self._create_widgets()
 
     def _create_widgets(self):
+        # 2. CRIAR UM FRAME ROLÁVEL QUE PREENCHE TODO O PAINEL ESQUERDO
+        scroll_frame = ScrolledFrame(self, autohide=True)
+        scroll_frame.pack(fill=tk.BOTH, expand=tk.YES)
 
-        empresa_frame = ttk.LabelFrame(self, text="Empresa Ativa")
+        # 3. ADICIONAR TODO O CONTEÚDO DENTRO DO 'scroll_frame' em vez de 'self'
+        
+        empresa_frame = ttk.LabelFrame(scroll_frame, text="Empresa Ativa")
         empresa_frame.pack(pady=10, padx=10, fill='x')
         self.combo_empresa_ativa = ttk.Combobox(empresa_frame, state="readonly")
         self.combo_empresa_ativa.pack(pady=5, padx=5, fill='x')
-        # A ligação do comando <<ComboboxSelected>> será feita no controller
-        # ou no AppPrincipal após a instanciação do PainelEsquerdo.
 
-        cadastros_frame = ttk.LabelFrame(self, text="Cadastros Rápidos")
+        cadastros_frame = ttk.LabelFrame(scroll_frame, text="Cadastros Rápidos")
         cadastros_frame.pack(pady=10, padx=10, fill='x')
         
         ttk.Label(cadastros_frame, text="Novo Cliente").pack(anchor='w', padx=5)
@@ -51,7 +54,7 @@ class PainelEsquerdo(ttk.Frame):
         self.btn_add_empresa = ttk.Button(cadastros_frame, text="Adicionar Empresa")
         self.btn_add_empresa.pack(fill='x', padx=5, pady=(0,10))
         
-        resumo_frame = ttk.LabelFrame(self, text="Resumo Financeiro")
+        resumo_frame = ttk.LabelFrame(scroll_frame, text="Resumo Financeiro")
         resumo_frame.pack(pady=10, padx=10, fill='x')
         self.lbl_receitas = ttk.Label(resumo_frame, text="Receitas: R$ 0.00")
         self.lbl_receitas.pack(anchor='w')
@@ -60,8 +63,7 @@ class PainelEsquerdo(ttk.Frame):
         self.lbl_saldo = ttk.Label(resumo_frame, text="Saldo: R$ 0.00")
         self.lbl_saldo.pack(anchor='w')
 
-    # Métodos para atualizar os labels do resumo financeiro
-    # Eles seriam chamados de fora (pelo controller ou AppPrincipal)
+    # Os outros métodos da classe permanecem os mesmos
     def update_financial_summary(self, receitas, despesas, saldo):
         self.lbl_receitas.config(
             text=f"Receitas: R$ {receitas:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
@@ -79,7 +81,6 @@ class PainelEsquerdo(ttk.Frame):
         else:
             self.lbl_saldo.config(text=saldo_text, foreground="black")
 
-    # Métodos para atualizar o dropdown de empresa, ou para obter valores das entradas
     def update_empresa_dropdown(self, empresas, set_default=False):
         self.combo_empresa_ativa['values'] = empresas
         if set_default and empresas:
@@ -88,6 +89,20 @@ class PainelEsquerdo(ttk.Frame):
     def get_empresa_ativa(self):
         return self.combo_empresa_ativa.get()
 
+    def set_empresa_ativa(self, nome_empresa):
+        self.combo_empresa_ativa.set(nome_empresa)
+
     def get_add_cliente_value(self):
         return self.entry_novo_cliente.get()
-    # Adicione getters para os outros campos de adição rápida conforme necessário
+    
+    def get_add_veiculo_value(self):
+        return self.entry_novo_veiculo.get()
+
+    def get_add_cc_value(self):
+        return self.entry_novo_cc.get()
+        
+    def get_add_categoria_value(self):
+        return self.entry_nova_categoria.get()
+
+    def get_add_empresa_value(self):
+        return self.entry_nova_empresa.get()

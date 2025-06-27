@@ -17,7 +17,7 @@ def iniciar_app_principal():
     style.configure('TCombobox', font=('Segoe UI', 11))
     # Para as colunas da Treeview
     style.configure('Treeview.Heading', font=('Segoe UI', 11, 'bold'))
-    style.configure('Treeview', font=('Segoe UI', 10))
+    style.configure('Treeview', font=('Segoe UI', 10), rowheight=25)
 
     # Criar as instâncias
     model = DataManager()
@@ -29,3 +29,4 @@ def iniciar_app_principal():
 
 if __name__ == "__main__":
     iniciar_app_principal()
+

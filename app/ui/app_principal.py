@@ -12,7 +12,7 @@ class AppPrincipal:
         self.master = master
         self.controller = None 
         self.master.title("Controle de Centro de Custos")
-        self.master.geometry("1200x800")
+        self.master.state('zoomed')
         
         self.paned_window = ttk.PanedWindow(master, orient=tk.HORIZONTAL)
         self.paned_window.pack(fill=tk.BOTH, expand=True)
@@ -24,8 +24,8 @@ class AppPrincipal:
         self.paned_window.add(self.right_frame, weight=4)
 
         # Instancie o PainelEsquerdo
-        self.left_panel = PainelEsquerdo(self.left_frame, controller=self.controller) 
-        self.left_panel.pack(fill=tk.BOTH, expand=True) 
+        self.painel_esquerdo = PainelEsquerdo(self.left_frame, controller=self.controller) 
+        self.painel_esquerdo.pack(fill=tk.BOTH, expand=True) 
         
         # Instancie o PainelDireito
         self.painel_direito = PainelDireito(self.right_frame, controlador=self.controller)
@@ -37,7 +37,7 @@ class AppPrincipal:
     def set_controller(self, controller):
         self.controller = controller
         # Passe o controller para os painéis modularizados
-        self.left_panel.controller = controller
+        self.painel_esquerdo.controller = controller
         self.painel_direito.controlador = controller 
 
         # Configuração dos comandos dos botões do PainelDireito
@@ -50,14 +50,14 @@ class AppPrincipal:
         self.painel_direito.btn_novo_lancamento.config(command=self.painel_direito._abrir_janela_novo_lancamento)
 
         # Comandos do PainelEsquerdo
-        self.left_panel.combo_empresa_ativa.bind("<<ComboboxSelected>>", self.controller.on_empresa_selecionada)
-        self.left_panel.btn_add_cliente.config(command=lambda: self.controller.adicionar_item_rapido('Cliente', self.left_panel.get_add_cliente_value()))
-        self.left_panel.btn_add_veiculo.config(command=lambda: self.controller.adicionar_item_rapido('Veículo', self.left_panel.get_add_veiculo_value()))
-        self.left_panel.btn_add_cc.config(command=lambda: self.controller.adicionar_item_rapido('Centro de Custo', self.left_panel.get_add_cc_value()))
-        self.left_panel.btn_add_categoria.config(command=lambda: self.controller.adicionar_item_rapido('Categoria', self.left_panel.get_add_categoria_value()))
-        self.left_panel.btn_add_empresa.config(command=lambda: self.controller.adicionar_item_rapido('Empresa', self.left_panel.get_add_empresa_value()))
+        self.painel_esquerdo.combo_empresa_ativa.bind("<<ComboboxSelected>>", self.controller.on_empresa_selecionada)
+        self.painel_esquerdo.btn_add_cliente.config(command=lambda: self.controller.adicionar_item_rapido('Cliente', self.painel_esquerdo.get_add_cliente_value()))
+        self.painel_esquerdo.btn_add_veiculo.config(command=lambda: self.controller.adicionar_item_rapido('Veículo', self.painel_esquerdo.get_add_veiculo_value()))
+        self.painel_esquerdo.btn_add_cc.config(command=lambda: self.controller.adicionar_item_rapido('Centro de Custo', self.painel_esquerdo.get_add_cc_value()))
+        self.painel_esquerdo.btn_add_categoria.config(command=lambda: self.controller.adicionar_item_rapido('Categoria', self.painel_esquerdo.get_add_categoria_value()))
+        self.painel_esquerdo.btn_add_empresa.config(command=lambda: self.controller.adicionar_item_rapido('Empresa', self.painel_esquerdo.get_add_empresa_value()))
 
-    # Os métodos create_left_panel e create_right_panel foram removidos daqui,
+    # Os métodos create_painel_esquerdo e create_right_panel foram removidos daqui,
     # pois a lógica de criação agora está dentro das classes PainelEsquerdo e PainelDireito.
     # Outros métodos relacionados a esses painéis foram movidos para as respectivas classes.
 
@@ -76,11 +76,12 @@ class AppPrincipal:
         # Para dropdowns que são controlados por PainelDireito (filtros)
         self.painel_direito.atualizar_dropdown(dropdown_name, values)
     
-    # Este método agora está no PainelEsquerdo
+    def set_empresa_ativa(self, nome_empresa):
+        self.painel_esquerdo.set_empresa_ativa(nome_empresa)
+
     def get_empresa_ativa(self):
         return self.painel_esquerdo.get_empresa_ativa()
 
-    # Este método agora está no PainelEsquerdo
     def update_empresa_dropdown(self, empresas, set_default=False):
         self.painel_esquerdo.update_empresa_dropdown(empresas, set_default)
 
@@ -92,7 +93,7 @@ class AppPrincipal:
 
     # Este método agora está no PainelEsquerdo
     def update_financial_summary(self, receitas, despesas, saldo):
-        self.left_panel.update_financial_summary(receitas, despesas, saldo)
+        self.painel_esquerdo.update_financial_summary(receitas, despesas, saldo)
 
     def get_selected_lancamento_id(self):
         return self.painel_direito.obter_id_lancamento_selecionado()

@@ -89,16 +89,23 @@ class AppController:
             self.atualizar_treeview_lancamentos()
     
     def excluir_lancamento_selecionado(self):
-        selected_id = self.view.get_selected_lancamento_id()
-        if selected_id is None:
+        selected_id_str = self.view.get_selected_lancamento_id()
+        if selected_id_str is None:
             self.view.set_status("Nenhum lançamento selecionado para excluir.")
+            return
+        try:
+            selected_id_int = int(selected_id_str)
+
+        except (ValueError, TypeError):
+            self.view.set_status("Erro: ID de lançamento inválido.")
             return
         
         if self.view.ask_yes_no("Tem certeza que deseja excluir o lançamento selecionado?"):
-            success, message = self.model.excluir_lancamento(selected_id)
+            success, message = self.model.excluir_lancamento(selected_id_int)
             if success:
                 self.aplicar_filtros_e_resetar_pagina()
             self.view.set_status(message)
+
 
     def salvar_novo_lancamento(self, dados):
         dados['Empresa'] = self.view.get_empresa_ativa()
@@ -134,7 +141,7 @@ class AppController:
                 empresas = self.model.get_empresas()
                 self.view.update_empresa_dropdown(empresas)
                 # Seleciona a empresa recém-criada
-                self.view.combo_empresa_ativa.set(valor_item)
+                self.view.set_empresa_ativa(valor_item)
                 self.on_empresa_selecionada() # Força a atualização dos outros filtros
         else:
             # Para todos os outros tipos, exige uma empresa ativa

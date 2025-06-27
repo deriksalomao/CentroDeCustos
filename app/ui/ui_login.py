@@ -10,8 +10,6 @@ class LoginWindow(ttk.Frame):
         self.on_login_success = on_success
         
         self.master.title("Login")
-        self.master.geometry("400x200")
-        self.master.resizable(False, False)
         
         # Centralizar a janela
         self.master.place_window_center()

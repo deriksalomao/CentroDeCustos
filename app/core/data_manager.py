@@ -22,7 +22,7 @@ class DataManager:
         try:
             self.df_lancamentos = pd.read_csv(LANCAMENTOS_FILE)
             # Garante que a coluna de data seja do tipo datetime
-            self.df_lancamentos['Data'] = pd.to_datetime(self.df_lancamentos['Data'], dayfirst=True)
+            self.df_lancamentos['Data'] = pd.to_datetime(self.df_lancamentos['Data'], format='%Y-%m-%d')
         except FileNotFoundError:
             # Se o arquivo não existe, cria um DataFrame vazio
             self.df_lancamentos = pd.DataFrame(columns=[
