@@ -1,9 +1,10 @@
-# app/ui/panels/painel_direito.py
+# app/ui/paineis/painel_direito.py
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
 import pandas as pd
 from ttkbootstrap.widgets import DateEntry
+from app.ui.ui_graficos import GraficosFrame # Importe a classe dos gráficos
 
 class PainelDireito(ttk.Frame):
     def __init__(self, frame_pai, controlador):
@@ -61,11 +62,17 @@ class PainelDireito(ttk.Frame):
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(pady=10, padx=10, fill="both", expand=True)
         self.aba_registros = ttk.Frame(self.notebook)
-        self.aba_graficos = ttk.Frame(self.notebook)
+        self.aba_graficos = ttk.Frame(self.notebook) # O frame para a aba de gráficos
         self.notebook.add(self.aba_registros, text='Registros Detalhados')
         self.notebook.add(self.aba_graficos, text='Gráficos Visuais')
 
-        self._criar_aba_registros() # Chama o método interno para criar a aba de registros
+        # --- ALTERAÇÃO AQUI ---
+        # Instanciar o GraficosFrame e colocá-lo na aba_graficos
+        self.graficos_view = GraficosFrame(self.aba_graficos)
+        self.graficos_view.pack(fill='both', expand=True)
+        # ---------------------
+
+        self._criar_aba_registros()
 
     def _criar_combobox_filtro(self, pai, rotulo):
         frame = ttk.Frame(pai)

@@ -56,6 +56,8 @@ class AppController:
             # Limpa a TreeView e o resumo se nenhuma empresa estiver selecionada
             self.view.update_lancamentos_treeview(pd.DataFrame())
             self.view.update_financial_summary(0, 0, 0)
+            # Limpa também os gráficos
+            self.view.painel_direito.graficos_view.atualizar_todos_os_graficos(pd.DataFrame())
             return
 
         filtros = self.view.get_filtros()
@@ -67,6 +69,11 @@ class AppController:
         self.view.update_page_info(self.current_page, total_pages)
         self.atualizar_treeview_lancamentos()
         self.atualizar_resumo_financeiro()
+        
+        # --- ALTERAÇÃO AQUI ---
+        # Chame a atualização dos gráficos com os dados filtrados
+        self.view.painel_direito.graficos_view.atualizar_todos_os_graficos(self.full_filtered_df)
+        # ---------------------
     
     def atualizar_treeview_lancamentos(self):
         start_index = (self.current_page - 1) * self.items_per_page
