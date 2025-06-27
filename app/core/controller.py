@@ -118,6 +118,29 @@ class AppController:
             self.aplicar_filtros_e_resetar_pagina()
         self.view.set_status(message)
 
+    def editar_lancamento_selecionado(self):
+        selected_id_str = self.view.get_selected_lancamento_id()
+        if selected_id_str is None:
+            self.view.set_status("Nenhum lançamento selecionado para editar.")
+            return
+        
+        selected_id_int = int(selected_id_str)
+        dados_lancamento = self.model.get_lancamento_by_id(selected_id_int)
+
+        if dados_lancamento:
+            # Note que estamos passando um novo callback para o salvamento
+            self.view.painel_direito._criar_janela_lancamento(
+                "Editar Lançamento", 
+                lambda dados: self.salvar_lancamento_editado(selected_id_int, dados),
+                dados_edicao=dados_lancamento
+            )
+
+    def salvar_lancamento_editado(self, lancamento_id, dados):
+        success, message = self.model.atualizar_lancamento(lancamento_id, dados)
+        if success:
+            self.aplicar_filtros_e_resetar_pagina()
+        self.view.set_status(message)
+
     def adicionar_item_rapido(self, tipo_item, valor_item):
         tabela_map = {
             'Cliente': 'clientes', 'Veículo': 'veiculos', 'Centro de Custo': 'centros_de_custo',

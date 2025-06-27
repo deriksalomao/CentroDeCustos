@@ -125,3 +125,16 @@ class DataManager:
         self.data_lookups[tabela].append(dados)
         self.save_data(tabela)
         return True, f"{dados.get('Nome')} adicionado com sucesso."
+
+    def get_lancamento_by_id(self, lancamento_id):
+        if lancamento_id in self.df_lancamentos.index:
+            return self.df_lancamentos.loc[lancamento_id].to_dict()
+        return None
+
+    def atualizar_lancamento(self, lancamento_id, dados):
+        if lancamento_id in self.df_lancamentos.index:
+            for chave, valor in dados.items():
+                self.df_lancamentos.loc[lancamento_id, chave] = valor
+            self.save_lancamentos()
+            return True, "Lançamento atualizado com sucesso."
+        return False, "Erro: Lançamento não encontrado."

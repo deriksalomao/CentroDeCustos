@@ -90,6 +90,9 @@ class PainelDireito(ttk.Frame):
         self.btn_proxima_pagina = ttk.Button(frame_paginacao, text="Próximo >")
         self.btn_proxima_pagina.pack(side='left', padx=5)
 
+        self.btn_editar_lancamento = ttk.Button(frame_paginacao, text="Editar Lançamento Selecionado", command=self._abrir_janela_editar_lancamento)
+        self.btn_editar_lancamento.pack(side='right', padx=10)
+
         self.btn_excluir_lancamento = ttk.Button(frame_paginacao, text="Excluir Lançamento Selecionado")
         self.btn_excluir_lancamento.pack(side='right', padx=10)
 
@@ -169,6 +172,10 @@ class PainelDireito(ttk.Frame):
         if self.controlador:
             self._criar_janela_lancamento("Novo Lançamento", self.controlador.salvar_novo_lancamento)
 
+    def _abrir_janela_editar_lancamento(self):
+        if self.controlador:
+            self.controlador.editar_lancamento_selecionado()
+
     def _criar_janela_lancamento(self, titulo, callback_salvar, dados_edicao=None):
         # Usa self.master_app_root que foi configurado no __init__ para popups
         popup = tk.Toplevel(self.master_app_root) 
@@ -228,6 +235,25 @@ class PainelDireito(ttk.Frame):
         entrada_valor.grid(row=linha, column=1, sticky="ew", pady=5)
         linha += 1
 
+        ttk.Label(frame, text="Status:").grid(row=linha, column=0, sticky="w", pady=5)
+        combo_status = ttk.Combobox(frame, state="readonly", values=["Pendente", "Pago", "Atrasado"])
+        combo_status.grid(row=linha, column=1, sticky="ew", pady=5)
+        linha += 1
+
+        if dados_edicao:
+            data_edicao = pd.to_datetime(dados_edicao['Data'])
+            entrada_data.entry.delete(0, tk.END)
+            entrada_data.entry.insert(0, data_edicao.strftime('%d/%m/%Y'))
+            combo_cc.set(dados_edicao.get('Centro_de_Custo', ''))
+            combo_veiculo.set(dados_edicao.get('Veículo', 'N/A'))
+            combo_cliente.set(dados_edicao.get('Cliente', 'Nenhum'))
+            combo_cat.set(dados_edicao.get('Categoria', ''))
+            entrada_desc.insert(0, dados_edicao.get('Descrição', ''))
+            combo_tipo.set(dados_edicao.get('Tipo', ''))
+            entrada_valor.insert(0, f"{dados_edicao.get('Valor', 0.0):.2f}")
+            combo_status.set(dados_edicao.get('Status', ''))
+
+
         def ao_salvar():
             if not all([combo_cat.get(), entrada_desc.get(), combo_tipo.get(), entrada_valor.get()]):
                 messagebox.showwarning("Campos Vazios", "Categoria, Descrição, Tipo e Valor são obrigatórios.", parent=popup)
@@ -243,7 +269,7 @@ class PainelDireito(ttk.Frame):
                     'Categoria': combo_cat.get(), 'Descrição': entrada_desc.get(),
                     'Tipo': combo_tipo.get(), 'Valor': valor_float,
                     'Cliente': combo_cliente.get() if combo_cliente.get() != "Nenhum" else None,
-                    'Status': 'Pendente'
+                    'Status': combo_status.get() or 'Pendente'
                 }
 
                 callback_salvar(dados)

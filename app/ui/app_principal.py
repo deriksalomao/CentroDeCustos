@@ -47,6 +47,7 @@ class AppPrincipal:
         self.painel_direito.btn_pagina_anterior.config(command=lambda: self.controller.change_page(-1))
         self.painel_direito.btn_proxima_pagina.config(command=lambda: self.controller.change_page(1))
         self.painel_direito.btn_excluir_lancamento.config(command=self.controller.excluir_lancamento_selecionado)
+        self.painel_direito.btn_editar_lancamento.config(command=self.controller.editar_lancamento_selecionado) # Adicionado
         self.painel_direito.btn_novo_lancamento.config(command=self.painel_direito._abrir_janela_novo_lancamento)
 
         # Comandos do PainelEsquerdo
