@@ -7,29 +7,36 @@ class PainelEsquerdo(ttk.Frame):
     def __init__(self, parent_frame, controller):
         super().__init__(parent_frame)
         self.controller = controller
-        # Dicionário para guardar os comboboxes de exclusão para fácil acesso
         self.combo_boxes_exclusao = {}
         self._create_widgets()
 
     def _create_widgets(self):
-        # --- LAYOUT CORRIGIDO E COM FUNÇÃO DE EXCLUSÃO ---
 
-        # 1. Frame Fixo para o Resumo Financeiro (na parte de baixo)
-        resumo_main_frame = ttk.LabelFrame(self, text="Resumo Financeiro")
-        resumo_main_frame.pack(side='bottom', fill='x', padx=10, pady=10)
+        # 1. Configura a grade (grid) do PainelEsquerdo.
+        #    A linha 0 (rolagem) vai se expandir. A linha 1 (resumo) terá tamanho fixo.
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
 
-        self.lbl_receitas = ttk.Label(resumo_main_frame, text="Receitas: R$ 0.00")
-        self.lbl_receitas.pack(anchor='w', padx=5)
-        self.lbl_despesas = ttk.Label(resumo_main_frame, text="Despesas: R$ 0.00")
-        self.lbl_despesas.pack(anchor='w', padx=5)
-        self.lbl_saldo = ttk.Label(resumo_main_frame, text="Saldo: R$ 0.00")
-        self.lbl_saldo.pack(anchor='w', padx=5)
-
-        # 2. Área de Rolagem para o conteúdo dinâmico
+        # 2. Área de Rolagem na linha 0
         scroll_area = ScrolledFrame(self, autohide=True)
-        scroll_area.pack(side='top', fill='both', expand=True)
+        # Usa .grid() para posicionar e 'nsew' para preencher todo o espaço da célula.
+        scroll_area.grid(row=0, column=0, sticky='nsew')
 
-        # 3. Widgets dentro da área de rolagem
+        # 3. Frame Fixo para o Resumo Financeiro na linha 1
+        resumo_main_frame = ttk.LabelFrame(self, text="Resumo Financeiro")
+        # Usa .grid() e 'ew' para preencher a largura. Adiciona padding externo.
+        resumo_main_frame.grid(row=1, column=0, sticky='ew', padx=10, pady=10)
+
+        # O conteúdo do resumo financeiro permanece o mesmo
+        self.lbl_receitas = ttk.Label(resumo_main_frame, text="Receitas: R$ 0.00")
+        self.lbl_receitas.pack(anchor='w', padx=5, pady=(0, 2))
+        self.lbl_despesas = ttk.Label(resumo_main_frame, text="Despesas: R$ 0.00")
+        self.lbl_despesas.pack(anchor='w', padx=5, pady=2)
+        self.lbl_saldo = ttk.Label(resumo_main_frame, text="Saldo: R$ 0.00")
+        self.lbl_saldo.pack(anchor='w', padx=5, pady=(2, 0))
+
+
+        # Widgets que ficam DENTRO da 'scroll_area' (não mudam)
         empresa_frame = ttk.LabelFrame(scroll_area, text="Empresa Ativa")
         empresa_frame.pack(pady=10, padx=10, fill='x')
         self.combo_empresa_ativa = ttk.Combobox(empresa_frame, state="readonly")
@@ -38,7 +45,6 @@ class PainelEsquerdo(ttk.Frame):
         cadastros_frame = ttk.LabelFrame(scroll_area, text="Gerenciar Cadastros")
         cadastros_frame.pack(pady=10, padx=10, fill='x')
 
-        # Usando um método auxiliar para não repetir código
         self.entry_novo_cliente, self.combo_boxes_exclusao['Cliente'] = self._criar_secao_cadastro(cadastros_frame, "Cliente")
         self.entry_novo_veiculo, self.combo_boxes_exclusao['Veículo'] = self._criar_secao_cadastro(cadastros_frame, "Veículo")
         self.entry_novo_cc, self.combo_boxes_exclusao['Centro de Custo'] = self._criar_secao_cadastro(cadastros_frame, "Centro de Custo")
@@ -51,7 +57,6 @@ class PainelEsquerdo(ttk.Frame):
         frame_geral = ttk.Frame(parent)
         frame_geral.pack(fill='x', pady=5, padx=5)
 
-        # Seção de Adicionar
         ttk.Label(frame_geral, text=f"Novo(a) {nome_item}:").pack(anchor='w')
         frame_add = ttk.Frame(frame_geral)
         frame_add.pack(fill='x', expand=True)
@@ -62,7 +67,6 @@ class PainelEsquerdo(ttk.Frame):
         btn_add = ttk.Button(frame_add, text="Adicionar", command=lambda n=nome_item: self.controller.adicionar_item_rapido(n, self._get_entry_value(n)))
         btn_add.pack(side='left')
 
-        # Seção de Excluir
         ttk.Label(frame_geral, text=f"Excluir {nome_item} Existente:").pack(anchor='w', pady=(5,0))
         frame_del = ttk.Frame(frame_geral)
         frame_del.pack(fill='x', expand=True, pady=(0, 10))
@@ -78,7 +82,6 @@ class PainelEsquerdo(ttk.Frame):
             
         return entry_add, combo_del
 
-    # Métodos para obter valores dos campos de forma centralizada
     def _get_entry_value(self, nome_item):
         if nome_item == "Cliente": return self.entry_novo_cliente.get()
         if nome_item == "Veículo": return self.entry_novo_veiculo.get()
@@ -90,7 +93,6 @@ class PainelEsquerdo(ttk.Frame):
     def _get_combo_value(self, nome_item):
         return self.combo_boxes_exclusao[nome_item].get()
     
-    # Restante das funções (sem alteração)
     def update_financial_summary(self, receitas, despesas, saldo):
         self.lbl_receitas.config(text=f"Receitas: R$ {receitas:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."), foreground="green")
         self.lbl_despesas.config(text=f"Despesas: R$ {despesas:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."), foreground="red")
@@ -106,7 +108,7 @@ class PainelEsquerdo(ttk.Frame):
     def update_cadastro_dropdown(self, tipo_item, valores):
         if tipo_item in self.combo_boxes_exclusao:
             self.combo_boxes_exclusao[tipo_item]['values'] = valores
-            self.combo_boxes_exclusao[tipo_item].set('') # Limpa seleção
+            self.combo_boxes_exclusao[tipo_item].set('') 
 
     def get_empresa_ativa(self):
         return self.combo_empresa_ativa.get()

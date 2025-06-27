@@ -4,6 +4,11 @@ empresas_data.json
 categorias.json
 config.json
 users.json
+empresas.json
+centros_de_custo.json
+clientes.json
+fornecedores.json
+veiculos.json
 
 # Diretório de cache e ambiente virtual do Python
 __pycache__/
