@@ -14,14 +14,22 @@ class AppPrincipal:
         self.master.title("Controle de Centro de Custos")
         self.master.state('zoomed')
         
-        self.paned_window = ttk.PanedWindow(master, orient=tk.HORIZONTAL)
+        self.paned_window = tk.PanedWindow(
+            master, 
+            orient=tk.HORIZONTAL, 
+            sashrelief=tk.RAISED, 
+            bg="white", 
+            bd=0
+        )
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
+        # Configuração do painel esquerdo
         self.left_frame = ttk.Frame(self.paned_window, width=250)
-        self.paned_window.add(self.left_frame, weight=1)
+        self.paned_window.add(self.left_frame)
 
+        # Configuração do painel direito
         self.right_frame = ttk.Frame(self.paned_window)
-        self.paned_window.add(self.right_frame, weight=4)
+        self.paned_window.add(self.right_frame)
 
         # Instancie o PainelEsquerdo
         self.painel_esquerdo = PainelEsquerdo(self.left_frame, controller=self.controller) 
