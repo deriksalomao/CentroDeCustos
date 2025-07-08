@@ -1,4 +1,3 @@
-# app/ui/paineis/painel_esquerdo.py
 import tkinter as tk
 import ttkbootstrap as ttk
 from ttkbootstrap.scrolled import ScrolledFrame
@@ -44,6 +43,13 @@ class PainelEsquerdo(ttk.Frame):
 
         cadastros_frame = ttk.LabelFrame(scroll_area, text="Gerenciar Cadastros")
         cadastros_frame.pack(pady=10, padx=10, fill='x')
+
+        # --- BOTÃO ADICIONADO AQUI ---
+        # Botão para abrir a gestão de cadastros completa
+        self.btn_gestao_cadastros = ttk.Button(cadastros_frame, text="Abrir Gestão Completa", command=lambda: self.controller.abrir_janela_gestao_cadastros())
+        self.btn_gestao_cadastros.pack(pady=10, padx=5, fill='x')
+        ttk.Separator(cadastros_frame, orient='horizontal').pack(fill='x', pady=5, padx=5)
+        # --- FIM DA ADIÇÃO ---
 
         self.entry_novo_cliente, self.combo_boxes_exclusao['Cliente'] = self._criar_secao_cadastro(cadastros_frame, "Cliente")
         self.entry_novo_veiculo, self.combo_boxes_exclusao['Veículo'] = self._criar_secao_cadastro(cadastros_frame, "Veículo")

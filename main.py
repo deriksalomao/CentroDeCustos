@@ -30,4 +30,4 @@ if __name__ == "__main__":
 # Inicia a janela de login primeiro, passando a função de sucesso
 # que será chamada quando o login for bem-sucedido
     login_view = LoginWindow(master=root, on_success=iniciar_app_principal)
-    root.mainloop()
+    root.mainloop() 

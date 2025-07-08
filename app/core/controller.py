@@ -4,6 +4,7 @@ import pandas as pd
 from tkinter import filedialog
 from .data_manager import DataManager
 import typing
+from app.ui.ui_cadastros import CadastrosManager
 
 if typing.TYPE_CHECKING:
     from app.ui.app_principal import AppPrincipal
@@ -244,3 +245,12 @@ class AppController:
                 self.update_all_filters()
                 self.aplicar_filtros_e_resetar_pagina()
         self.view.set_status(message)
+
+    def abrir_janela_gestao_cadastros(self):
+        """Abre a janela de gestão de cadastros."""
+        if not self.view.get_empresa_ativa():
+            self.view.set_status("Por favor, selecione uma empresa primeiro.")
+            return
+        
+        # Cria uma instância da nossa nova tela
+        CadastrosManager(master=self.view.master, controller=self)
