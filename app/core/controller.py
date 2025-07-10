@@ -5,6 +5,8 @@ from tkinter import filedialog
 from .data_manager import DataManager
 import typing
 from app.ui.ui_cadastros import CadastrosManager
+# --- NOVA IMPORTAÇÃO ADICIONADA AQUI ---
+from app.ui.ui_relatorio_veiculo import RelatorioVeiculo
 
 if typing.TYPE_CHECKING:
     from app.ui.app_principal import AppPrincipal
@@ -238,9 +240,9 @@ class AppController:
         )
         if success:
             if tipo_item == 'Empresa':
-                 empresas = self.model.get_empresas()
-                 self.view.update_empresa_dropdown(empresas, set_default=True)
-                 self.on_empresa_selecionada(None)
+                empresas = self.model.get_empresas()
+                self.view.update_empresa_dropdown(empresas, set_default=True)
+                self.on_empresa_selecionada(None)
             else:
                 self.update_all_filters()
                 self.aplicar_filtros_e_resetar_pagina()
@@ -254,3 +256,109 @@ class AppController:
         
         # Cria uma instância da nossa nova tela
         CadastrosManager(master=self.view.master, controller=self)
+
+    # --- NOVOS MÉTODOS PARA O RELATÓRIO DE VEÍCULO ADICIONADOS AQUI ---
+    
+    def abrir_janela_relatorio_veiculo(self):
+        """Abre a janela do relatório de custo de veículo."""
+        if not self.view.get_empresa_ativa():
+            # A classe AppPrincipal não tem messagebox, então o import é feito aqui ou no topo do arquivo
+            from tkinter import messagebox
+            messagebox.showwarning("Nenhuma Empresa Selecionada", 
+                                 "Por favor, selecione uma empresa ativa antes de gerar relatórios.")
+            return
+        
+        RelatorioVeiculo(master=self.view.master, controller=self)
+
+    def processar_relatorio_veiculo(self, placa, mes_ano_str):
+        """
+        Busca, calcula e retorna os dados formatados para o relatório de veículo.
+        """
+        self.view.set_status(f"Processando relatório para {placa} em {mes_ano_str}...")
+
+        # 1. Validar e extrair mês e ano da string de entrada
+        try:
+            mes, ano = map(int, mes_ano_str.split('/'))
+        except ValueError:
+            from tkinter import messagebox
+            messagebox.showerror("Formato Inválido", "Por favor, use o formato MM/AAAA para o período.", parent=self.view.master)
+            return [], {}
+
+        # 2. Obter os dados brutos do DataManager
+        empresa = self.view.get_empresa_ativa()
+        df = self.model.get_lancamentos_para_relatorio_veiculo(empresa, placa, mes, ano)
+
+        if df.empty:
+            self.view.set_status(f"Nenhum lançamento encontrado para {placa} em {mes_ano_str}.")
+            return [], {"total_despesas": 0, "total_frete": 0, "saldo_final": 0, "indice_medio": 0}
+
+        # 3. Preparar o DataFrame para o relatório
+        # As colunas do relatório que representam custos
+        colunas_custo = ['PNEU', 'PECAS', 'BORRACHARIA', 'MECANICO', 'COMBUSTIVEL', 'AJUDANTE', 'MOTORISTA', 'VR DESPESAS', 'ICMS']
+        # As colunas de receita
+        colunas_receita = ['FRETE VAS', 'AGREGADO']
+        
+        # Cria uma tabela dinâmica (pivot) para transformar linhas de lançamentos em colunas de custos/receitas
+        # As linhas serão agrupadas por dia.
+        df_pivot = df.pivot_table(
+            index=df['Data'].dt.date, 
+            columns='Categoria', 
+            values='Valor', 
+            aggfunc='sum'
+        ).fillna(0)
+        
+        # Garante que todas as colunas do relatório existam no DataFrame, preenchendo com 0 se não existirem
+        for col in colunas_custo + colunas_receita:
+            if col not in df_pivot.columns:
+                df_pivot[col] = 0
+
+        # 4. Calcular as colunas derivadas
+        df_pivot['TOTAL'] = df_pivot[colunas_custo].sum(axis=1)
+        # O Saldo é a principal receita (FRETE VAS) menos o total de custos
+        df_pivot['SALDO'] = df_pivot['FRETE VAS'] - df_pivot['TOTAL']
+        # O Índice é o percentual do Saldo em relação à receita
+        df_pivot['INDICE'] = (df_pivot['SALDO'] / df_pivot['FRETE VAS'].replace(0, 1)) * 100
+
+        # 5. Formatar os dados para a tabela da interface
+        dados_para_tabela = []
+        df_pivot = df_pivot.reset_index() # Transforma o índice (data) em uma coluna
+        df_pivot = df_pivot.rename(columns={'index': 'DATA'})
+        df_pivot['DATA'] = pd.to_datetime(df_pivot['DATA']).dt.strftime('%d/%m/%Y')
+
+        # Define a ordem final das colunas, igual à da interface
+        ordem_colunas = ['DATA'] + colunas_custo[:8] + ['AGREGADO', 'FRETE VAS', 'ICMS'] + ['TOTAL', 'SALDO', 'INDICE']
+        df_final = df_pivot[ordem_colunas]
+        
+        # Formata os valores numéricos como texto com duas casas decimais
+        for col in df_final.columns:
+            if col not in ['DATA', 'INDICE']:
+                df_final[col] = df_final[col].apply(lambda x: f"{x:,.2f}")
+        df_final['INDICE'] = df_final['INDICE'].apply(lambda x: f"{x:.2f}%")
+
+        dados_para_tabela = df_final.values.tolist()
+
+        # 6. Calcular os totais para o rodapé
+        total_despesas = df_pivot['TOTAL'].sum()
+        total_frete = df_pivot['FRETE VAS'].sum()
+        saldo_final = total_frete - total_despesas
+        indice_medio = (saldo_final / total_frete if total_frete else 0) * 100
+
+        totais = {
+            "total_despesas": total_despesas,
+            "total_frete": total_frete,
+            "saldo_final": saldo_final,
+            "indice_medio": indice_medio
+        }
+
+        self.view.set_status("Relatório gerado com sucesso.")
+        return dados_para_tabela, totais
+    
+    def exportar_relatorio_veiculo(self, dados_relatorio):
+        """Exporta os dados do relatório de veículo para um arquivo Excel."""
+        from tkinter import messagebox
+        if not dados_relatorio:
+            messagebox.showinfo("Nenhum Dado", "Não há dados na tabela para exportar.", parent=self.view.master)
+            return
+            
+        messagebox.showinfo("Em Desenvolvimento", "A exportação para Excel será implementada em breve!", parent=self.view.master)
+    # --- FIM DA ADIÇÃO ---

@@ -130,6 +130,33 @@ class DataManager:
         if lancamento_id in self.df_lancamentos.index:
             return self.df_lancamentos.loc[lancamento_id].to_dict()
         return None
+    
+    def get_lancamentos_para_relatorio_veiculo(self, empresa, placa, mes, ano):
+        """
+        Busca todos os lançamentos de um veículo específico em um determinado mês/ano.
+        Retorna um DataFrame do Pandas com os dados relevantes.
+        """
+        try:
+            df = self.get_table_as_df('lancamentos')
+            if df.empty:
+                return pd.DataFrame()
+
+            # Garantir que a coluna Data é do tipo datetime
+            df['Data'] = pd.to_datetime(df['Data'])
+
+            # Filtrar pela empresa, veículo, mês e ano
+            df_filtrado = df[
+                (df['Empresa'] == empresa) &
+                (df['Veiculo'] == placa) &
+                (df['Data'].dt.month == mes) &
+                (df['Data'].dt.year == ano)
+            ].copy()
+            
+            return df_filtrado
+            
+        except Exception as e:
+            print(f"Erro ao buscar lançamentos para o relatório: {e}")
+            return pd.DataFrame()
 
     def atualizar_lancamento(self, lancamento_id, dados):
         if lancamento_id in self.df_lancamentos.index:

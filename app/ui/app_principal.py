@@ -14,6 +14,10 @@ class AppPrincipal:
         self.master.title("Controle de Centro de Custos")
         self.master.state('zoomed')
         
+        # --- CÓDIGO NOVO INSERIDO AQUI ---
+        self.criar_menu_principal()
+        # --- FIM DA INSERÇÃO ---
+        
         self.paned_window = tk.PanedWindow(
             master, 
             orient=tk.HORIZONTAL, 
@@ -41,6 +45,29 @@ class AppPrincipal:
 
         # A criação do status bar continua aqui
         self.create_status_bar()
+
+    # --- MÉTODO NOVO INSERIDO AQUI ---
+    def criar_menu_principal(self):
+        """Cria a barra de menu principal da aplicação."""
+        menu_bar = tk.Menu(self.master)
+        self.master.config(menu=menu_bar)
+
+        # --- ALTERAÇÃO APLICADA AQUI ---
+        # Menu Sistema
+        menu_sistema = tk.Menu(menu_bar, tearoff=0)
+        menu_bar.add_cascade(label="Sistema", menu=menu_sistema) # O nome foi alterado de "Arquivo" para "Sistema"
+        # O comando de sair pode ser adicionado depois, quando o controller estiver setado
+        # menu_sistema.add_command(label="Sair", command=self.controller.fechar_aplicacao)
+        
+        # Menu Relatórios
+        menu_relatorios = tk.Menu(menu_bar, tearoff=0)
+        menu_bar.add_cascade(label="Relatórios", menu=menu_relatorios)
+        menu_relatorios.add_command(
+            label="Custo por Veículo",
+            # Este comando vai chamar uma função no controller que ainda criaremos
+            command=lambda: self.controller.abrir_janela_relatorio_veiculo() if self.controller else None
+        )
+    # --- FIM DA INSERÇÃO ---
 
     def set_controller(self, controller):
         self.controller = controller
@@ -104,7 +131,6 @@ class AppPrincipal:
     def reset_filters(self):
         self.painel_direito.resetar_filtros()
 
-    # --- FUNÇÃO ADICIONADA PARA CORRIGIR O ERRO ---
     def update_cadastro_dropdown(self, tipo_item, valores):
         """Repassa a chamada para o painel esquerdo, onde a função realmente existe."""
         self.painel_esquerdo.update_cadastro_dropdown(tipo_item, valores)
