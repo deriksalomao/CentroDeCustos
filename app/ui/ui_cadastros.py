@@ -8,18 +8,15 @@ class CadastrosManager:
         self.controller = controller
         self.empresa_ativa = self.controller.view.get_empresa_ativa()
 
-        # Criar a janela Toplevel
         self.win = tk.Toplevel(self.master)
         self.win.title(f"Gestão de Cadastros - {self.empresa_ativa}")
         self.win.geometry("800x600")
         self.win.transient(self.master)
         self.win.grab_set()
 
-        # Notebook para abas
         self.notebook = ttk.Notebook(self.win)
         self.notebook.pack(pady=10, padx=10, fill="both", expand=True)
 
-        # Itens para criar abas
         self.tipos_cadastro = ['Cliente', 'Veículo', 'Centro de Custo', 'Categoria']
         self.trees = {}
 
@@ -31,22 +28,18 @@ class CadastrosManager:
         frame_aba = ttk.Frame(self.notebook, padding="10")
         self.notebook.add(frame_aba, text=tipo_cadastro)
 
-        # Frame para a tabela
         frame_tree = ttk.Frame(frame_aba)
         frame_tree.pack(fill="both", expand=True)
 
-        # Treeview para exibir os itens
         tree = ttk.Treeview(frame_tree, columns=('Nome'), show='headings')
         tree.heading('Nome', text='Nome')
         tree.pack(side="left", fill="both", expand=True)
         self.trees[tipo_cadastro] = tree
 
-        # Scrollbar
         scrollbar = ttk.Scrollbar(frame_tree, orient="vertical", command=tree.yview)
         scrollbar.pack(side="right", fill="y")
         tree.configure(yscrollcommand=scrollbar.set)
 
-        # Frame para os botões
         frame_botoes = ttk.Frame(frame_aba)
         frame_botoes.pack(fill="x", pady=10)
 
@@ -58,23 +51,19 @@ class CadastrosManager:
                                  command=lambda t=tipo_cadastro: self._excluir_item(t))
         btn_excluir.pack(side="right", padx=5)
 
-        # Popular a tabela
         self._popular_tree(tipo_cadastro)
 
     def _popular_tree(self, tipo_cadastro):
         """Busca os dados e preenche a Treeview."""
         tree = self.trees[tipo_cadastro]
-        # Limpar a treeview
         for i in tree.get_children():
             tree.delete(i)
         
-        # Obter dados do controller/model
         dados = self.controller.model.get_lookup_data(
             self._get_tabela_map()[tipo_cadastro], 
             self.empresa_ativa
         )
         
-        # Inserir dados
         for nome_item in sorted(dados):
             tree.insert("", "end", values=(nome_item,))
     
@@ -85,8 +74,8 @@ class CadastrosManager:
         
         if novo_nome and novo_nome.strip():
             self.controller.adicionar_item_rapido(tipo_cadastro, novo_nome.strip())
-            self._popular_tree(tipo_cadastro) # Atualiza a lista na tela de gestão
-            self.controller.update_all_filters() # Atualiza os dropdowns na tela principal
+            self._popular_tree(tipo_cadastro)
+            self.controller.update_all_filters()
 
     def _excluir_item(self, tipo_cadastro):
         """Exclui o item selecionado na Treeview."""
@@ -101,8 +90,8 @@ class CadastrosManager:
 
         if messagebox.askyesno("Confirmar Exclusão", f"Tem certeza que deseja excluir '{nome_item}'?", parent=self.win):
             self.controller.excluir_item_rapido(tipo_cadastro, nome_item)
-            self._popular_tree(tipo_cadastro) # Atualiza a lista na tela de gestão
-            self.controller.update_all_filters() # Atualiza os dropdowns na tela principal
+            self._popular_tree(tipo_cadastro)
+            self.controller.update_all_filters()
 
     def _get_tabela_map(self):
         return {

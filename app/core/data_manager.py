@@ -21,10 +21,8 @@ class DataManager:
         """Carrega todos os arquivos de dados na memória."""
         try:
             self.df_lancamentos = pd.read_csv(LANCAMENTOS_FILE)
-            # Garante que a coluna de data seja do tipo datetime
             self.df_lancamentos['Data'] = pd.to_datetime(self.df_lancamentos['Data'], format='%Y-%m-%d')
         except FileNotFoundError:
-            # Se o arquivo não existe, cria um DataFrame vazio
             self.df_lancamentos = pd.DataFrame(columns=[
                 'Data', 'Empresa', 'Centro_de_Custo', 'Veículo', 'Categoria',
                 'Descrição', 'Tipo', 'Valor', 'Cliente', 'Status'
@@ -36,7 +34,6 @@ class DataManager:
                 with open(path, 'r', encoding='utf-8') as f:
                     self.data_lookups[name] = json.load(f)
             except (FileNotFoundError, json.JSONDecodeError):
-                # Se o arquivo não existe ou está vazio/corrompido, cria uma estrutura vazia
                 self.data_lookups[name] = []
 
     def save_data(self, data_key):
@@ -83,7 +80,6 @@ class DataManager:
             if filtros.get(filtro_key) and filtros[filtro_key] != "Todos":
                 df_filtered = df_filtered[df_filtered[col] == filtros[filtro_key]]
         
-        # Define o índice como o índice original do DataFrame para manter a rastreabilidade
         df_filtered.index.name = 'id'
         return df_filtered.sort_values(by='Data', ascending=False)
 
@@ -96,7 +92,7 @@ class DataManager:
         return {'receitas': receitas, 'despesas': despesas, 'saldo': saldo}
 
     def adicionar_lancamento(self, dados):
-        # Converte o dicionário para um DataFrame de uma linha para concatenar
+
         novo_lancamento_df = pd.DataFrame([dados])
         self.df_lancamentos = pd.concat([self.df_lancamentos, novo_lancamento_df], ignore_index=True)
         self.save_lancamentos()
@@ -110,13 +106,11 @@ class DataManager:
         return False, "Erro: Lançamento não encontrado."
     
     def adicionar_item_generico(self, tabela, dados):
-        # A 'tabela' aqui é a chave para o nosso dicionário de dados (ex: 'clientes', 'veiculos')
         if tabela not in self.data_lookups:
             return False, "Tipo de cadastro inválido."
 
-        # Verifica se o item já existe para evitar duplicatas
         nome_item = dados.get('Nome')
-        empresa_item = dados.get('Empresa') # Pode ser None para 'empresas'
+        empresa_item = dados.get('Empresa')
         
         for item in self.data_lookups[tabela]:
             if item.get('Nome') == nome_item and item.get('Empresa') == empresa_item:
@@ -141,10 +135,8 @@ class DataManager:
             if df.empty:
                 return pd.DataFrame()
 
-            # Garantir que a coluna Data é do tipo datetime
             df['Data'] = pd.to_datetime(df['Data'])
 
-            # Filtrar pela empresa, veículo, mês e ano
             df_filtrado = df[
                 (df['Empresa'] == empresa) &
                 (df['Veiculo'] == placa) &
@@ -171,13 +163,9 @@ class DataManager:
             return False, "Tipo de cadastro inválido."
 
         item_encontrado = False
-        # Filtra a lista para remover o item desejado
         itens_originais = self.data_lookups[tabela]
         itens_filtrados = []
         for item in itens_originais:
-            # A condição para manter um item na lista é:
-            # - O nome não bate, OU
-            # - O nome bate, mas a empresa não (para itens que dependem da empresa)
             if item.get('Nome') != nome_item or (empresa and item.get('Empresa') != empresa):
                 itens_filtrados.append(item)
             else:

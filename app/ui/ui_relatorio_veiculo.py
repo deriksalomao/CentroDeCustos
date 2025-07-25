@@ -11,15 +11,14 @@ class RelatorioVeiculo:
         self.controller = controller
         self.empresa_ativa = self.controller.view.get_empresa_ativa()
         
-        # Busca os veículos da empresa ativa para popular o filtro
         self.veiculos_da_empresa = self.controller.model.get_lookup_data('veiculos', self.empresa_ativa)
 
         # --- Configuração da Janela (Toplevel) ---
         self.win = tk.Toplevel(self.master)
         self.win.title(f"Relatório de Custo por Veículo - {self.empresa_ativa}")
         self.win.geometry("1200x700")
-        self.win.transient(self.master) # Mantém a janela sobre a principal
-        self.win.grab_set() # Bloqueia interação com a janela principal
+        self.win.transient(self.master)
+        self.win.grab_set()
 
         # --- Frame de Filtros ---
         frame_filtros = ttk.LabelFrame(self.win, text="Filtros do Relatório", padding=10)
@@ -70,7 +69,6 @@ class RelatorioVeiculo:
         self.lbl_totais = ttk.Label(frame_totais, text="Aguardando geração do relatório...", font=("-weight bold"))
         self.lbl_totais.pack()
 
-    # --- MÉTODO ATUALIZADO ---
     def gerar_relatorio(self):
         """Pega os filtros da tela e pede para o controller processar os dados."""
         mes_ano = self.entry_mes_ano.get()
@@ -104,7 +102,6 @@ class RelatorioVeiculo:
         else:
             self.lbl_totais.config(text="Nenhum dado encontrado para este período.")
 
-    # --- MÉTODO ATUALIZADO ---
     def exportar_relatorio(self):
         """Pede para o controller exportar os dados visíveis na tabela."""
         dados_visiveis = self.tabela.get_rows(visible=True)

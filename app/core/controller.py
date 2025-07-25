@@ -5,7 +5,6 @@ from tkinter import filedialog
 from .data_manager import DataManager
 import typing
 from app.ui.ui_cadastros import CadastrosManager
-# --- NOVA IMPORTAÇÃO ADICIONADA AQUI ---
 from app.ui.ui_relatorio_veiculo import RelatorioVeiculo
 
 if typing.TYPE_CHECKING:
@@ -30,7 +29,6 @@ class AppController:
         else:
             self.view.set_status("Nenhuma empresa encontrada. Adicione uma empresa para começar.")
     
-    # --- FUNÇÃO MODIFICADA PARA MELHORAR A FLUIDEZ ---
     def on_empresa_selecionada(self, event=None):
         """
         Ao selecionar uma nova empresa, agora apenas atualizamos as opções de filtro.
@@ -39,9 +37,6 @@ class AppController:
         """
         self.view.set_status("Empresa alterada. Aplique os filtros para ver os resultados.")
         self.update_all_filters()
-        # A linha abaixo, que causava a lentidão, foi removida.
-        # self.aplicar_filtros_e_resetar_pagina() 
-    # --- FIM DA MODIFICAÇÃO ---
 
     def update_all_filters(self):
         empresa_ativa = self.view.get_empresa_ativa()
@@ -80,7 +75,6 @@ class AppController:
 
     def limpar_filtros(self):
         self.view.reset_filters()
-        # Após limpar, aplicamos os filtros padrão imediatamente.
         self.aplicar_filtros_e_resetar_pagina()
 
     def atualizar_relatorio_e_resumo(self):
@@ -254,15 +248,11 @@ class AppController:
             self.view.set_status("Por favor, selecione uma empresa primeiro.")
             return
         
-        # Cria uma instância da nossa nova tela
         CadastrosManager(master=self.view.master, controller=self)
-
-    # --- NOVOS MÉTODOS PARA O RELATÓRIO DE VEÍCULO ADICIONADOS AQUI ---
     
     def abrir_janela_relatorio_veiculo(self):
         """Abre a janela do relatório de custo de veículo."""
         if not self.view.get_empresa_ativa():
-            # A classe AppPrincipal não tem messagebox, então o import é feito aqui ou no topo do arquivo
             from tkinter import messagebox
             messagebox.showwarning("Nenhuma Empresa Selecionada", 
                                  "Por favor, selecione uma empresa ativa antes de gerar relatórios.")
@@ -276,7 +266,6 @@ class AppController:
         """
         self.view.set_status(f"Processando relatório para {placa} em {mes_ano_str}...")
 
-        # 1. Validar e extrair mês e ano da string de entrada
         try:
             mes, ano = map(int, mes_ano_str.split('/'))
         except ValueError:
@@ -284,7 +273,6 @@ class AppController:
             messagebox.showerror("Formato Inválido", "Por favor, use o formato MM/AAAA para o período.", parent=self.view.master)
             return [], {}
 
-        # 2. Obter os dados brutos do DataManager
         empresa = self.view.get_empresa_ativa()
         df = self.model.get_lancamentos_para_relatorio_veiculo(empresa, placa, mes, ano)
 
@@ -292,14 +280,10 @@ class AppController:
             self.view.set_status(f"Nenhum lançamento encontrado para {placa} em {mes_ano_str}.")
             return [], {"total_despesas": 0, "total_frete": 0, "saldo_final": 0, "indice_medio": 0}
 
-        # 3. Preparar o DataFrame para o relatório
-        # As colunas do relatório que representam custos
         colunas_custo = ['PNEU', 'PECAS', 'BORRACHARIA', 'MECANICO', 'COMBUSTIVEL', 'AJUDANTE', 'MOTORISTA', 'VR DESPESAS', 'ICMS']
-        # As colunas de receita
+
         colunas_receita = ['FRETE VAS', 'AGREGADO']
         
-        # Cria uma tabela dinâmica (pivot) para transformar linhas de lançamentos em colunas de custos/receitas
-        # As linhas serão agrupadas por dia.
         df_pivot = df.pivot_table(
             index=df['Data'].dt.date, 
             columns='Categoria', 
@@ -307,29 +291,22 @@ class AppController:
             aggfunc='sum'
         ).fillna(0)
         
-        # Garante que todas as colunas do relatório existam no DataFrame, preenchendo com 0 se não existirem
         for col in colunas_custo + colunas_receita:
             if col not in df_pivot.columns:
                 df_pivot[col] = 0
 
-        # 4. Calcular as colunas derivadas
         df_pivot['TOTAL'] = df_pivot[colunas_custo].sum(axis=1)
-        # O Saldo é a principal receita (FRETE VAS) menos o total de custos
         df_pivot['SALDO'] = df_pivot['FRETE VAS'] - df_pivot['TOTAL']
-        # O Índice é o percentual do Saldo em relação à receita
         df_pivot['INDICE'] = (df_pivot['SALDO'] / df_pivot['FRETE VAS'].replace(0, 1)) * 100
 
-        # 5. Formatar os dados para a tabela da interface
         dados_para_tabela = []
-        df_pivot = df_pivot.reset_index() # Transforma o índice (data) em uma coluna
+        df_pivot = df_pivot.reset_index()
         df_pivot = df_pivot.rename(columns={'index': 'DATA'})
         df_pivot['DATA'] = pd.to_datetime(df_pivot['DATA']).dt.strftime('%d/%m/%Y')
 
-        # Define a ordem final das colunas, igual à da interface
         ordem_colunas = ['DATA'] + colunas_custo[:8] + ['AGREGADO', 'FRETE VAS', 'ICMS'] + ['TOTAL', 'SALDO', 'INDICE']
         df_final = df_pivot[ordem_colunas]
-        
-        # Formata os valores numéricos como texto com duas casas decimais
+
         for col in df_final.columns:
             if col not in ['DATA', 'INDICE']:
                 df_final[col] = df_final[col].apply(lambda x: f"{x:,.2f}")
@@ -337,7 +314,6 @@ class AppController:
 
         dados_para_tabela = df_final.values.tolist()
 
-        # 6. Calcular os totais para o rodapé
         total_despesas = df_pivot['TOTAL'].sum()
         total_frete = df_pivot['FRETE VAS'].sum()
         saldo_final = total_frete - total_despesas
@@ -361,4 +337,3 @@ class AppController:
             return
             
         messagebox.showinfo("Em Desenvolvimento", "A exportação para Excel será implementada em breve!", parent=self.view.master)
-    # --- FIM DA ADIÇÃO ---
