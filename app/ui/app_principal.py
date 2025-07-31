@@ -1,4 +1,3 @@
-# app/ui/app_principal.py
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
@@ -45,8 +44,7 @@ class AppPrincipal:
         self.master.config(menu=menu_bar)
 
         menu_sistema = tk.Menu(menu_bar, tearoff=0)
-        menu_bar.add_cascade(label="Sistema", menu=menu_sistema) # O nome foi alterado de "Arquivo" para "Sistema"
-        
+        menu_bar.add_cascade(label="Sistema", menu=menu_sistema)
         menu_relatorios = tk.Menu(menu_bar, tearoff=0)
         menu_bar.add_cascade(label="Relatórios", menu=menu_relatorios)
         menu_relatorios.add_command(

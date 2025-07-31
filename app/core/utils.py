@@ -1,4 +1,3 @@
-# app/core/utils.py
 import sys
 import os
 

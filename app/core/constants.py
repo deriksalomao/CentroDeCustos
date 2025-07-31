@@ -1,4 +1,3 @@
-# app/core/constants.py
 import os
 from app.core.utils import resource_path
 

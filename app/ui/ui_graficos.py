@@ -1,4 +1,3 @@
-# app/ui/ui_graficos.py
 import ttkbootstrap as ttk
 import pandas as pd
 from matplotlib.figure import Figure

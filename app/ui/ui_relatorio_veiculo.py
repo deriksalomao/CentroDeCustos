@@ -1,4 +1,3 @@
-# app/ui/ui_relatorio_veiculo.py
 import tkinter as tk
 from tkinter import messagebox
 import ttkbootstrap as ttk

@@ -1,4 +1,3 @@
-# app/ui/ui_login.py
 import ttkbootstrap as ttk
 from tkinter import messagebox
 

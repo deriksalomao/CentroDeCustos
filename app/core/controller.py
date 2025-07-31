@@ -1,4 +1,3 @@
-# app/core/controller.py
 import math
 import pandas as pd
 from tkinter import filedialog
