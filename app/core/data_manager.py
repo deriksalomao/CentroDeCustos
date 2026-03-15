@@ -1,56 +1,23 @@
 import pandas as pd
-import json
-from .constants import (
-    LANCAMENTOS_FILE, EMPRESAS_FILE, VEICULOS_FILE, CENTROS_DE_CUSTO_FILE,
-    CATEGORIAS_FILE, CLIENTES_FILE
-)
+import sqlite3
+from .database import get_connection
 
 class DataManager:
     def __init__(self):
-        self.file_map = {
-            'empresas': EMPRESAS_FILE,
-            'veiculos': VEICULOS_FILE,
-            'centros_de_custo': CENTROS_DE_CUSTO_FILE,
-            'categorias': CATEGORIAS_FILE,
-            'clientes': CLIENTES_FILE
-        }
-        self.load_all_data()
+        pass
 
-    def load_all_data(self):
-        """Carrega todos os arquivos de dados na memória."""
-        try:
-            self.df_lancamentos = pd.read_csv(LANCAMENTOS_FILE)
-            self.df_lancamentos['Data'] = pd.to_datetime(self.df_lancamentos['Data'], format='%Y-%m-%d')
-        except FileNotFoundError:
-            self.df_lancamentos = pd.DataFrame(columns=[
-                'Data', 'Empresa', 'Centro_de_Custo', 'Veículo', 'Categoria',
-                'Descrição', 'Tipo', 'Valor', 'Cliente', 'Status'
-            ])
-
-        self.data_lookups = {}
-        for name, path in self.file_map.items():
-            try:
-                with open(path, 'r', encoding='utf-8') as f:
-                    self.data_lookups[name] = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError):
-                self.data_lookups[name] = []
-
-    def save_data(self, data_key):
-        """Salva um arquivo JSON específico."""
-        if data_key in self.file_map:
-            with open(self.file_map[data_key], 'w', encoding='utf-8') as f:
-                json.dump(self.data_lookups[data_key], f, indent=4, ensure_ascii=False)
-
-    def save_lancamentos(self):
-        """Salva o DataFrame de lançamentos em CSV."""
-        self.df_lancamentos.to_csv(LANCAMENTOS_FILE, index=False)
-
-    def get_lookup_data(self, key, empresa=None):
-        """Obtém dados de lookup (categorias, veículos, etc.), filtrando por empresa se aplicável."""
-        items = self.data_lookups.get(key, [])
+    def get_lookup_data(self, tabela, empresa=None):
+        """Obtém dados de categorias, veículos, etc., filtrando por empresa se aplicável."""
+        conn = get_connection()
+        cursor = conn.cursor()
         if empresa:
-            return [item['Nome'] for item in items if item.get('Empresa') == empresa]
-        return [item['Nome'] for item in items]
+            cursor.execute(f"SELECT nome FROM {tabela} WHERE empresa = ?", (empresa,))
+        else:
+            cursor.execute(f"SELECT nome FROM {tabela}")
+        
+        resultados = [row['nome'] for row in cursor.fetchall()]
+        conn.close()
+        return resultados
 
     def get_empresas(self):
         return self.get_lookup_data('empresas')
@@ -68,19 +35,48 @@ class DataManager:
         return self.get_lookup_data('clientes', empresa)
 
     def get_filtered_data(self, empresa, filtros):
-        df_filtered = self.df_lancamentos[self.df_lancamentos['Empresa'] == empresa].copy()
+        conn = get_connection()
+        query = "SELECT * FROM lancamentos WHERE empresa = ?"
+        params = [empresa]
 
         if filtros.get('data_inicio') and filtros.get('data_fim'):
-            start_date = pd.to_datetime(filtros['data_inicio'])
-            end_date = pd.to_datetime(filtros['data_fim'])
-            df_filtered = df_filtered[(df_filtered['Data'] >= start_date) & (df_filtered['Data'] <= end_date)]
+            query += " AND data >= ? AND data <= ?"
+            params.extend([filtros['data_inicio'], filtros['data_fim']])
 
-        for col, filtro_key in [('Centro_de_Custo', 'cc'), ('Veículo', 'veiculo'), ('Categoria', 'categoria'), ('Tipo', 'tipo'), ('Cliente', 'cliente'), ('Status', 'status')]:
+        filtro_map = {
+            'Centro_de_Custo': 'cc', 'Veículo': 'veiculo', 
+            'Categoria': 'categoria', 'Tipo': 'tipo', 
+            'Cliente': 'cliente', 'Status': 'status'
+        }
+
+        for col_db, filtro_key in filtro_map.items():
             if filtros.get(filtro_key) and filtros[filtro_key] != "Todos":
-                df_filtered = df_filtered[df_filtered[col] == filtros[filtro_key]]
+                col_lower = col_db.lower()
+                if col_db == 'Centro_de_Custo': col_lower = 'centro_de_custo'
+                if col_db == 'Veículo': col_lower = 'veiculo'
+                
+                query += f" AND {col_lower} = ?"
+                params.append(filtros[filtro_key])
+
+        query += " ORDER BY data DESC"
+
+        df = pd.read_sql_query(query, conn, params=params)
+        conn.close()
+
+        df.rename(columns={
+            'id': 'id', 'data': 'Data', 'empresa': 'Empresa',
+            'centro_de_custo': 'Centro_de_Custo', 'veiculo': 'Veículo',
+            'categoria': 'Categoria', 'descricao': 'Descrição',
+            'tipo': 'Tipo', 'valor': 'Valor', 'cliente': 'Cliente', 'status': 'Status'
+        }, inplace=True)
         
-        df_filtered.index.name = 'id'
-        return df_filtered.sort_values(by='Data', ascending=False)
+        if not df.empty:
+            df['Data'] = pd.to_datetime(df['Data'])
+            df.set_index('id', inplace=True)
+        else:
+            df = df.set_index('id') if 'id' in df.columns else df
+            
+        return df
 
     def get_resumo_financeiro(self, df):
         if df.empty:
@@ -91,88 +87,143 @@ class DataManager:
         return {'receitas': receitas, 'despesas': despesas, 'saldo': saldo}
 
     def adicionar_lancamento(self, dados):
-
-        novo_lancamento_df = pd.DataFrame([dados])
-        self.df_lancamentos = pd.concat([self.df_lancamentos, novo_lancamento_df], ignore_index=True)
-        self.save_lancamentos()
-        return True, "Lançamento adicionado com sucesso."
+        conn = get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''
+                INSERT INTO lancamentos (data, empresa, centro_de_custo, veiculo, categoria, descricao, tipo, valor, cliente, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                dados.get('Data'), dados.get('Empresa'), dados.get('Centro_de_Custo'),
+                dados.get('Veículo'), dados.get('Categoria'), dados.get('Descrição'),
+                dados.get('Tipo'), dados.get('Valor'), dados.get('Cliente'), dados.get('Status')
+            ))
+            conn.commit()
+            return True, "Lançamento adicionado com sucesso."
+        except Exception as e:
+            return False, f"Erro ao adicionar: {e}"
+        finally:
+            conn.close()
 
     def excluir_lancamento(self, lancamento_id):
-        if lancamento_id in self.df_lancamentos.index:
-            self.df_lancamentos.drop(lancamento_id, inplace=True)
-            self.save_lancamentos()
+        conn = get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM lancamentos WHERE id = ?", (lancamento_id,))
+            conn.commit()
             return True, "Lançamento excluído com sucesso."
-        return False, "Erro: Lançamento não encontrado."
-    
+        except Exception as e:
+            return False, f"Erro ao excluir: {e}"
+        finally:
+            conn.close()
+
     def adicionar_item_generico(self, tabela, dados):
-        if tabela not in self.data_lookups:
-            return False, "Tipo de cadastro inválido."
-
-        nome_item = dados.get('Nome')
-        empresa_item = dados.get('Empresa')
+        conn = get_connection()
+        cursor = conn.cursor()
+        nome = dados.get('Nome')
+        empresa = dados.get('Empresa')
         
-        for item in self.data_lookups[tabela]:
-            if item.get('Nome') == nome_item and item.get('Empresa') == empresa_item:
-                 return False, f"Erro: Item '{nome_item}' já existe."
-
-        self.data_lookups[tabela].append(dados)
-        self.save_data(tabela)
-        return True, f"{dados.get('Nome')} adicionado com sucesso."
+        try:
+            if tabela == 'empresas':
+                cursor.execute("SELECT id FROM empresas WHERE nome = ?", (nome,))
+                if cursor.fetchone():
+                    return False, f"Erro: Empresa '{nome}' já existe."
+                cursor.execute("INSERT INTO empresas (nome) VALUES (?)", (nome,))
+            else:
+                cursor.execute(f"SELECT id FROM {tabela} WHERE nome = ? AND empresa = ?", (nome, empresa))
+                if cursor.fetchone():
+                    return False, f"Erro: Item '{nome}' já existe."
+                cursor.execute(f"INSERT INTO {tabela} (nome, empresa) VALUES (?, ?)", (nome, empresa))
+            conn.commit()
+            return True, f"{nome} adicionado com sucesso."
+        except Exception as e:
+            return False, f"Erro ao adicionar: {e}"
+        finally:
+            conn.close()
 
     def get_lancamento_by_id(self, lancamento_id):
-        if lancamento_id in self.df_lancamentos.index:
-            return self.df_lancamentos.loc[lancamento_id].to_dict()
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM lancamentos WHERE id = ?", (lancamento_id,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return {
+                'Data': row['data'], 'Empresa': row['empresa'], 
+                'Centro_de_Custo': row['centro_de_custo'], 'Veículo': row['veiculo'],
+                'Categoria': row['categoria'], 'Descrição': row['descricao'],
+                'Tipo': row['tipo'], 'Valor': row['valor'], 
+                'Cliente': row['cliente'], 'Status': row['status']
+            }
         return None
-    
-    def get_lancamentos_para_relatorio_veiculo(self, empresa, placa, mes, ano):
-        """
-        Busca todos os lançamentos de um veículo específico em um determinado mês/ano.
-        Retorna um DataFrame do Pandas com os dados relevantes.
-        """
-        try:
-            df = self.get_table_as_df('lancamentos')
-            if df.empty:
-                return pd.DataFrame()
-
-            df['Data'] = pd.to_datetime(df['Data'])
-
-            df_filtrado = df[
-                (df['Empresa'] == empresa) &
-                (df['Veiculo'] == placa) &
-                (df['Data'].dt.month == mes) &
-                (df['Data'].dt.year == ano)
-            ].copy()
-            
-            return df_filtrado
-            
-        except Exception as e:
-            print(f"Erro ao buscar lançamentos para o relatório: {e}")
-            return pd.DataFrame()
 
     def atualizar_lancamento(self, lancamento_id, dados):
-        if lancamento_id in self.df_lancamentos.index:
-            for chave, valor in dados.items():
-                self.df_lancamentos.loc[lancamento_id, chave] = valor
-            self.save_lancamentos()
+        conn = get_connection()
+        cursor = conn.cursor()
+        try:
+            set_clause = []
+            params = []
+            col_map = {
+                'Data': 'data', 'Empresa': 'empresa', 'Centro_de_Custo': 'centro_de_custo',
+                'Veículo': 'veiculo', 'Categoria': 'categoria', 'Descrição': 'descricao',
+                'Tipo': 'tipo', 'Valor': 'valor', 'Cliente': 'cliente', 'Status': 'status'
+            }
+            for key, val in dados.items():
+                if key in col_map:
+                    set_clause.append(f"{col_map[key]} = ?")
+                    params.append(val)
+            
+            params.append(lancamento_id)
+            query = f"UPDATE lancamentos SET {', '.join(set_clause)} WHERE id = ?"
+            cursor.execute(query, params)
+            conn.commit()
             return True, "Lançamento atualizado com sucesso."
-        return False, "Erro: Lançamento não encontrado."
-    
+        except Exception as e:
+            return False, f"Erro ao atualizar: {e}"
+        finally:
+            conn.close()
+
     def excluir_item_generico(self, tabela, nome_item, empresa=None):
-        if tabela not in self.data_lookups:
-            return False, "Tipo de cadastro inválido."
-
-        item_encontrado = False
-        itens_originais = self.data_lookups[tabela]
-        itens_filtrados = []
-        for item in itens_originais:
-            if item.get('Nome') != nome_item or (empresa and item.get('Empresa') != empresa):
-                itens_filtrados.append(item)
+        conn = get_connection()
+        cursor = conn.cursor()
+        try:
+            if tabela == 'empresas':
+                cursor.execute("DELETE FROM empresas WHERE nome = ?", (nome_item,))
             else:
-                item_encontrado = True
+                cursor.execute(f"DELETE FROM {tabela} WHERE nome = ? AND empresa = ?", (nome_item, empresa))
+            conn.commit()
+            return True, f"Item '{nome_item}' excluído com sucesso."
+        except Exception as e:
+            return False, f"Erro ao excluir: {e}"
+        finally:
+            conn.close()
 
-        if not item_encontrado:
-            return False, f"Erro: Item '{nome_item}' não encontrado para exclusão."
+    def get_lancamentos_para_relatorio_veiculo(self, empresa, placa, mes, ano):
+        conn = get_connection()
+        mes_str = f"{mes:02d}"
+        
+        query = """
+            SELECT * FROM lancamentos 
+            WHERE empresa = ? 
+            AND veiculo = ? 
+            AND strftime('%m', data) = ? 
+            AND strftime('%Y', data) = ?
+        """
+        params = [empresa, placa, mes_str, str(ano)]
+        
+        df = pd.read_sql_query(query, conn, params=params)
+        conn.close()
+        
+        if df.empty:
+            return pd.DataFrame()
 
-        self.data_lookups[tabela] = itens_filtrados
-        self.save_data(tabela)
-        return True, f"Item '{nome_item}' excluído com sucesso."
+        df.rename(columns={
+            'id': 'id', 'data': 'Data', 'empresa': 'Empresa',
+            'centro_de_custo': 'Centro_de_Custo', 'veiculo': 'Veiculo',
+            'categoria': 'Categoria', 'descricao': 'Descrição',
+            'tipo': 'Tipo', 'valor': 'Valor', 'cliente': 'Cliente', 'status': 'Status'
+        }, inplace=True)
+        
+        df['Data'] = pd.to_datetime(df['Data'])
+        return df

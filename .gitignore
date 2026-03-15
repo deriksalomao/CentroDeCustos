@@ -1,25 +1,21 @@
-# Ficheiros de dados gerados pelo aplicativo (NÃO ENVIAR!)
-lancamentos.csv
-empresas_data.json
-categorias.json
-config.json
-users.json
-empresas.json
-centros_de_custo.json
-clientes.json
-fornecedores.json
-veiculos.json
-
-# Diretório de cache e ambiente virtual do Python
-__pycache__/
-venv/
+# 1. Ambientes Virtuais Python
 .venv/
+venv/
 env/
-.env
 
-# Ficheiros de pacotes do Python
-*.egg-info
+# 2. Arquivos Compilados do Python
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Artefatos de compilação do PyInstaller
-/build/
-/dist/
+# 3. Banco de Dados e Dados Locais
+data/*.db
+data/*.csv
+data/*.json
+
+# 4. Compilação de Executáveis
+build/
+dist/
+
+# 5. Configurações de Editor (VS Code)
+.vscode/
